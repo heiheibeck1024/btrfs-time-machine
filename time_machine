@@ -2,6 +2,7 @@
 require 'optparse'
 require 'date'
 require 'time'
+require 'chronic'
 require 'yaml'
 require 'fileutils'
 require 'shellwords'
@@ -156,6 +157,17 @@ def command_path(command)
   cmd_path
 end
 
+def meta_save
+  meta_file = File.join(@backup_mount_point, 'latest', 'meta.yml')
+  File.open(meta_file, 'w') do |file|
+    file.puts "created_at: '#{Time.now}'"
+  end
+end
+
+def meta_read(meta_file)
+  YAML.load_file meta_file
+end
+
 def rsync
   @sources.each do |src_data|
     src = src_data['source']
@@ -181,6 +193,7 @@ def rsync
     log "Starting the backup."
     `sudo #{rsync} #{rsync_opts} #{src}/ #{dst} >> #{@log_file} 2>&1` # src needs a trailing slash on dir or it'll go in wrong dir.
     alert "Failed to backup `#{src}'" unless $?.success?
+    meta_save
   end
 end
 
@@ -189,45 +202,64 @@ def btrfs_scan()
 end
 
 def btrfs_volume?(path)
-  unless File.directory? path
-    return false
-  end
-
+  return false unless File.directory? path
   return true if File.stat(path).ino == 256
   false
 end
 
-def btrfs_snapshot
-  date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
+def btrfs_snapshot_required?(snapshot_dir)
+  #TODO: get rid of the repetition.
+  required = true
+  unit = "hour" if snapshot_dir.match /hourly/
+  unit = "day" if snapshot_dir.match /daily/
+  unit = "week" if snapshot_dir.match /weekly/
+  unit = "month" if snapshot_dir.match /monthly/
+  unit = "year" if snapshot_dir.match /yearly/
 
-  FileUtils.mkdir_p "#{@snapshot_dir}/hourly"
-  FileUtils.mkdir_p "#{@snapshot_dir}/daily"
-  FileUtils.mkdir_p "#{@snapshot_dir}/weekly"
+  snapshots = Dir.entries snapshot_dir
+  snapshots.delete ".."
+  snapshots.delete "."
 
-  snap_dir = "#{@snapshot_dir}/hourly/#{date}"
-  latest   = "#{@backup_mount_point}/latest"
-
-  # create hourly snapshot
-  log "Creating hourly file system snapshot."
-  alert_and_abort "A snapshot by that name already exists" if File.directory?(snap_dir)
-  `sudo btrfs subvolume snapshot #{latest} '#{snap_dir}' >> #{@log_file} 2>&1`        # TODO: make logging better
-
-  $?.success?
-
-  # make daily snapshot if necessary
-  snap_dir = "#{@snapshot_dir}/daily/" + Time.now.strftime("%Y-%m-%d")
-  unless File.directory?(snap_dir)
-    log "Creating daily snapshot"
-    `sudo btrfs subvolume snapshot #{latest} '#{snap_dir}' >> #{@log_file} 2>&1`
-    $?.success?
+  snapshots.each do |snapshot|
+    snapshot_taken_at = Time.parse(meta_read(File.join(snapshot_dir, snapshot, 'meta.yml'))["created_at"])
+    required = false if snapshot_taken_at < Chronic.parse("1 #{unit} ago")
   end
+  required
+end
 
-  # make weekly snapshot if necessary
-  snap_dir = "#{@snapshot_dir}/weekly/" + Time.now.strftime("%Y-%m-%d %U")
-  unless File.directory?(snap_dir)
-    log "Creating weekly snapshot"
-    `sudo btrfs subvolume snapshot #{latest} '#{snap_dir}' >> #{@log_file} 2>&1`
-    $?.success?
+def btrfs_snapshot_expired?(snapshot_dir)
+  #TODO: get rid of the repetition.
+  expired = false
+  unit = "hour" if snapshot_dir.match /hourly/
+  unit = "day" if snapshot_dir.match /daily/
+  unit = "week" if snapshot_dir.match /weekly/
+  unit = "month" if snapshot_dir.match /monthly/
+  unit = "year" if snapshot_dir.match /yearly/
+  frequency = "hourly" if snapshot_dir.match /hourly/
+  frequency = "daily" if snapshot_dir.match /daily/
+  frequency = "weekly" if snapshot_dir.match /weekly/
+  frequency = "monthly" if snapshot_dir.match /monthly/
+  frequency = "yearly" if snapshot_dir.match /yearly/
+
+  snapshot_taken_at = Time.parse(meta_read(File.join(snapshot_dir, 'meta.yml'))["created_at"])
+  expired = true if snapshot_taken_at > Chronic.parse("#{@snapshot_max_age[frequency].to_i} #{unit} ago")
+  expired
+end
+
+def btrfs_snapshot
+  %w[hourly daily weekly monthly yearly].each do |frequency|
+    snap_dir = File.join(@snapshot_dir, frequency, Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+    btrfs_take_snapshot snap_dir
+  end
+end
+
+def btrfs_take_snapshot(path)
+  return true unless btrfs_snapshot_required?(File.split(path).first)
+  FileUtils.mkdir_p File.split(path).first     # make sure that parent dir for snapshot exists
+  unless File.directory?(path)
+    log "Saving snapshot to `#{path}'"
+    `sudo btrfs subvolume snapshot #{File.join(@backup_mount_point, 'latest')} '#{path}' >> #{@log_file} 2>&1`
+    alert "Failed to make snapshot in `#{path}'" unless $?.success?
   end
 end
 
@@ -237,23 +269,21 @@ def btrfs_delete_snapshot(date)
 end
 
 def btrfs_snapshot_rotate
-  ['hourly','daily','weekly'].each do |unit|
-    snapshots = Dir.entries("#{@snapshot_dir}/#{unit}")
+  %w[hourly daily weekly yearly].each do |frequency|
+    snapshot_dir = File.join(@snapshot_dir, frequency)
+    snapshots = Dir.entries snapshot_dir
     snapshots.delete ".."
     snapshots.delete "."
 
     snapshots.each do |snapshot|
-      max_age = @snapshot_max_age[unit].to_i * 3600
-      if Time.parse(snapshot) < Time.now - (@snapshot_max_age[unit] * 3600)
-        btrfs_delete_snapshot snapshot
-      end
+      btrfs_delete_snapshot File.join(frequency, snapshot) if btrfs_snapshot_expired? File.join(snapshot_dir, snapshot)
     end
   end
 end
 
 lock
 log "BTRFS time machine version #{VER} started."
-btrfs_scan
+#btrfs_scan
 
 # mount the backup filesystem
 mount @device, @backup_mount_point
