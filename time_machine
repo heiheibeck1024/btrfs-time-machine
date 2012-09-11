@@ -185,7 +185,7 @@ def rsync
 end
 
 def btrfs_scan()
-  `sudo btrfsctl -a >> #{@log_file} 2>&1`
+  `sudo btrfs device scan >> #{@log_file} 2>&1`
 end
 
 def btrfs_volume?(path)
