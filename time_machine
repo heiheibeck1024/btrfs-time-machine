@@ -224,7 +224,7 @@ def btrfs_snapshot
 
   log "Creating file system snapshot."
   alert_and_abort "A snapshot by that name already exists" if File.directory?("#{@snapshot_dir}/#{date}")
-  `sudo btrfs subvolume snapshot #{@backup_mount_point}/latest '#{@snapshot_dir}/#{date}' >> #{@log_file} 2>&1`        # TODO: make logging better
+  `sudo btrfs subvolume snapshot -r #{@backup_mount_point}/latest '#{@snapshot_dir}/#{date}' >> #{@log_file} 2>&1`        # TODO: make logging better
   $?.success?
 end
 
