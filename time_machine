@@ -160,11 +160,28 @@ def rsync
   @sources.each do |src_data|
     src = src_data['source']
     dst = File.expand_path("#{@backup_mount_point}/latest/#{src}")
+    # XXX Consider an explicit enum, with btrfs, lvm and dm-thin snapshots.
+    if src_data['snapshot']
+      do_snapshot_src = true
+      src2 = "#{src}/ro-snapshot"
+      if File.exist? src2
+        alert_and_abort "read-only source snapshot already exists at #{src2}"
+      end
+      `sudo btrfs subvolume snapshot -r #{src} #{src2}`
+      alert_and_abort "Failed to snapshot `#{src}'" unless $?.success?
+    else
+      do_snapshot_src = false
+      src2 = src
+    end
     rsync = command_path('rsync')
     rsync_opts = '-v -aAX --numeric-ids --delete --delete-excluded --human-readable --inplace --no-whole-file'
 
     unless @rsync_options.nil?
       rsync_opts += ' ' + @rsync_options.join(' ')
+    end
+
+    if src_data['snapshot']
+      rsync_opts += ' -x'
     end
 
     if src_data.key? 'exclusions' then
@@ -179,8 +196,12 @@ def rsync
 
     # start the backup
     log "Starting the backup."
-    `sudo #{rsync} #{rsync_opts} #{src}/ #{dst} >> #{@log_file} 2>&1` # src needs a trailing slash on dir or it'll go in wrong dir.
+    `sudo #{rsync} #{rsync_opts} #{src2}/ #{dst} >> #{@log_file} 2>&1` # src needs a trailing slash on dir or it'll go in wrong dir.
     alert "Failed to backup `#{src}'" unless $?.success?
+    if do_snapshot_src and src != src2
+      `sudo btrfs subvolume delete #{src2}`
+      alert "Failed to clean up `#{src2}'" unless $?.success?
+    end
   end
 end
 
