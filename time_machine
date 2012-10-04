@@ -161,7 +161,7 @@ def rsync
     src = src_data['source']
     dst = File.expand_path("#{@backup_mount_point}/latest/#{src}")
     rsync = command_path('rsync')
-    rsync_opts = '-v -aAX --numeric-ids --delete --delete-excluded --human-readable --inplace'
+    rsync_opts = '-v -aAX --numeric-ids --delete --delete-excluded --human-readable --inplace --no-whole-file'
 
     unless @rsync_options.nil?
       rsync_opts += ' ' + @rsync_options.join(' ')
