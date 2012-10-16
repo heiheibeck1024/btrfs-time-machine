@@ -197,11 +197,12 @@ def rsync
     # start the backup
     log "Starting the backup."
     `sudo #{rsync} #{rsync_opts} #{src2}/ #{dst} >> #{@log_file} 2>&1` # src needs a trailing slash on dir or it'll go in wrong dir.
-    alert "Failed to backup `#{src}'" unless $?.success?
+    rsync_failed = ! $?.success?
     if do_snapshot_src and src != src2
       `sudo btrfs subvolume delete #{src2}`
       alert "Failed to clean up `#{src2}'" unless $?.success?
     end
+    alert_and_abort "Failed to backup `#{src}'" if rsync_failed
   end
 end
 
