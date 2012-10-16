@@ -62,6 +62,7 @@ cfg = YAML.load_file(CONFIG)
 
 @rsync_options = cfg['rsync_options']
 @mount_options = cfg['mount_options']
+@deduplicate = cfg['deduplicate']
 
 @alerts = [] # an empty array to store alerts that will be emailed
 
@@ -260,6 +261,14 @@ end
 remount_as "rw", @device, @backup_mount_point
 
 rsync
+
+if @deduplicate
+  log "Will dedup"
+  `sudo python -m bedup dedup-vol --flush -- #{@backup_mount_point}/latest >> #{@log_file} 2>&1`
+  alert_and_abort "Could not deduplicate" unless $?.success?
+else
+  log "dedup not enabled"
+end
 
 btrfs_snapshot
 btrfs_snapshot_rotate
