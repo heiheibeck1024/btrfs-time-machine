@@ -180,7 +180,7 @@ def rsync
       rsync_opts += ' ' + @rsync_options.join(' ')
     end
 
-    if src_data['snapshot']
+    if src_data['snapshot'] or src_data['one-filesystem']
       rsync_opts += ' -x'
     end
 
