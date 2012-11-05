@@ -18,6 +18,9 @@ log_file: '/var/log/time_machine.log'
 # max age in hours to keep a snapshot around for.
 snapshot_max_age: 48
 
+# Requires https://github.com/g2p/bedup
+deduplicate: true
+
 # lock file to prevent simultaneous backups.
 lock_file: '/var/lock/time_machine'
 
