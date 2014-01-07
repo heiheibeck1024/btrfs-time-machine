@@ -14,3 +14,8 @@
 
 - source '/var/spool/mail'
 - source '/var/www'
+
+# for ntfs or fat file systems
+- source: '/mount/ntfdata/pic'
+  rsync_options:
+    - "--modify-window=1"

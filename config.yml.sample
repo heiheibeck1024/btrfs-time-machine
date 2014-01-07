@@ -6,6 +6,8 @@ backup_mount_point: '/srv/btrfs_backups'
 
 # log file
 log_file: '/var/log/time_machine.log'
+# for per-backup logfiles, %d will be replaced with the date
+#log_file: '/var/log/timemachine/timemachine-%d.log'
 
 # extra mount options for the btrfs volume
 #mount_options:
