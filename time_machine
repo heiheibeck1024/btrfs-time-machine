@@ -52,7 +52,7 @@ cfg = YAML.load_file(CONFIG)
 @sources = YAML.load_file(SOURCES)
 @dest_device_uuid = cfg['dest_device_uuid']
 @backup_mount_point = cfg['backup_mount_point']
-@log_file = cfg['log_file']
+@log_file = cfg['log_file'].gsub("%d",Time.now.strftime("%Y%m%d_%H%M%S"))
 @device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
 @snapshot_dir = "#{@backup_mount_point}/snapshots"
 @snapshot_max_age = cfg['snapshot_max_age']
@@ -99,7 +99,6 @@ def alert_and_abort(message)
   alert("#{message}")
   alert("Backup aborting due to fatal error")
   send_alerts
-  unlock
   exit 1
 end
 
@@ -181,6 +180,10 @@ def rsync
       rsync_opts += ' ' + @rsync_options.join(' ')
     end
 
+	unless src_data['rsync_options'].nil?
+      rsync_opts += ' ' + src_data['rsync_options'].join(' ')
+    end
+
     if src_data.fetch('snapshot', false) or src_data.fetch('one-filesystem', false)
       rsync_opts += ' -x'
     end
@@ -196,8 +199,10 @@ def rsync
     alert_and_abort "Could not create #{dst} directory" unless FileUtils.mkdir_p dst
 
     # start the backup
-    log "Starting the backup."
-    `sudo #{rsync} #{rsync_opts} #{src2}/ #{dst} >> #{@log_file} 2>&1` # src needs a trailing slash on dir or it'll go in wrong dir.
+    log "Starting the backup:"
+	rsync_cmd="sudo #{rsync} #{rsync_opts} #{src2}/ #{dst} >> #{@log_file} 2>&1" # src needs a trailing slash on dir or it'll go in wrong dir.
+	log "Running '#{rsync_cmd}'"
+    `#{rsync_cmd}` 
     rsync_failed = ! $?.success?
     if do_snapshot_src and src != src2
       `sudo btrfs subvolume delete #{src2}`
@@ -246,6 +251,9 @@ def btrfs_snapshot_rotate
 end
 
 lock
+at_exit do
+	unlock
+end
 log "BTRFS time machine version #{VER} started."
 btrfs_scan
 
@@ -264,7 +272,7 @@ rsync
 
 if @deduplicate
   log "Will dedup"
-  `sudo python -m bedup dedup-vol --flush -- #{@backup_mount_point}/latest >> #{@log_file} 2>&1`
+  `sudo bedup dedup --flush -- #{@backup_mount_point}/latest >> #{@log_file} 2>&1`
   alert_and_abort "Could not deduplicate" unless $?.success?
 else
   log "dedup not enabled"
@@ -276,4 +284,3 @@ remount_as "ro", @device, @backup_mount_point
 
 log "Finished Successfully!"
 send_alerts
-unlock
