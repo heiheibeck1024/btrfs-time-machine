@@ -1,13 +1,18 @@
 require 'test_helper'
 
-context "#TimeMachine::Config" do
-  setup { TimeMachine::Config.new("test/config/config1.yml") }
+context "#TimeMachine::Settings" do
+  setup {
+    TimeMachine::Config.new({
+      :config => "test/config/config1.yml",
+      :sources => "test/config/sources1.yml"
+    })
+  }
 
-  asserts_topic.kind_of TimeMachine::Config
+  asserts_topic.kind_of TimeMachine::Settings
   asserts("to_hash") {topic.to_hash}.kind_of Hash
 
   settings = {
-    "dest_device_uuid" => 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    "dest_device_uuid" => 'xxxx',
     "backup_mount_point" => '/srv/btrfs_backups',
     "log_file" => '/var/log/time_machine.log',
     "mount_options" => [ "compress" ],
