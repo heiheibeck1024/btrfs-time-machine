@@ -39,6 +39,26 @@ module TimeMachine
       false
     end
 
+    def btrfs_subvolume_create
+    end
+
+    def btrfs_subvolume_delete
+    end
+
+    def btrfs_subvolumes
+      return false unless btrfs_volume?
+      subvolumes = `btrfs_subvolume list #{mount_point} | awk '{ print $7 }'`.split
+      subvolumes.map { |dir| File.join(mount_point, dir) }
+    end
+
+    def btrfs_take_snapshot(destination,options={:read_only=>false})
+      `btrfs subvolume snapshot \
+        #{"-r" if options[:read_only]} \
+        #{@device} #{destination}
+      `
+      $?.success?
+    end
+
     def read_only?
       return nil unless mounted?
       mount_options.include? "ro"
