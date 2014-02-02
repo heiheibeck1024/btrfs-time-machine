@@ -26,8 +26,8 @@ context "#TimeMachine::Settings" do
     "sources" => [
       {"source"=>"/home/me", "one-filesystem"=>true, "exclusions"=>["Dropbox", "tmp"]},
       {"source"=>"/usr/local", "snapshot"=>true, "exclusions"=>["src"]},
-      "source '/var/spool/mail'",
-      "source '/var/www'",
+      {"source"=>"/var/spool/mail"},
+      {"source"=>"/var/www"},
       {"source"=>"/mount/ntfdata/pic", "rsync_options"=>["--modify-window=1"]}
     ]
   }
