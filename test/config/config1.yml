@@ -1,4 +1,4 @@
-dest_device_uuid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+dest_device_uuid: 'xxxx'
 backup_mount_point: '/srv/btrfs_backups'
 log_file: '/var/log/time_machine.log'
 mount_options:
