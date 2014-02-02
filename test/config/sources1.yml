@@ -1,0 +1,21 @@
+# directory you wish to backup.
+# exclusion paths are relative to source directory
+- source: '/home/me'
+  one-filesystem: true
+  exclusions:
+    - 'Dropbox'
+    - 'tmp'
+
+- source: '/usr/local'
+# snapshot implies one-filesystem
+  snapshot: true
+  exclusions:
+    - 'src'
+
+- source '/var/spool/mail'
+- source '/var/www'
+
+# for ntfs or fat file systems
+- source: '/mount/ntfdata/pic'
+  rsync_options:
+    - "--modify-window=1"
