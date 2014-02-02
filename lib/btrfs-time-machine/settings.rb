@@ -13,7 +13,7 @@ module TimeMachine
       @sources = YAML.load_file(sources)
 
       @settings = @config
-      @settings[:sources] = @sources
+      @settings["sources"] = @sources
     end
 
     def to_hash
