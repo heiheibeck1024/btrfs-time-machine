@@ -12,8 +12,8 @@
   exclusions:
     - 'src'
 
-- source '/var/spool/mail'
-- source '/var/www'
+- source: '/var/spool/mail'
+- source: '/var/www'
 
 # for ntfs or fat file systems
 - source: '/mount/ntfdata/pic'
