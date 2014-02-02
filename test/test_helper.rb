@@ -8,5 +8,6 @@ BTRFS_FS = File.join(File.dirname(__FILE__), "dev/btrfs")
 EXT4_FS = File.join(File.dirname(__FILE__), "dev/ext4")
 MOUNT_POINT = File.join(File.dirname(__FILE__), "mnt")
 
-require 'settings'
 require 'filesystem'
+require 'rsync'
+require 'settings'
