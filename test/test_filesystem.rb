@@ -16,6 +16,14 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
     asserts("is read-write") {!topic.read_only?}
   end
 
+  context "take read-only snapshot" do
+    hookup { topic.btrfs_take_snapshot("test",{:read_only=>true}) }
+  end
+
+  context "take read-write snapshot" do
+    
+  end
+
   context "after remounting" do
     hookup { topic.remount(["ro"])}
     asserts("is now mounted") {topic.mounted?}
