@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module TimeMachine
   class FileSystem
     def initialize device,mount_point
@@ -12,11 +14,17 @@ module TimeMachine
         next unless "#{details[1]}/" == full_path(path)
         return details[3].split(",")
       end
-      nil
+      []
     end
 
     def mounted? path=""
-      !mount_options(path).nil?
+      return true if btrfs_subvolume?(path)
+
+      File.open('/proc/mounts', 'r').each_line do |line|
+        return true if "#{line.split(" ")[1]}/" == full_path(path)
+      end
+
+      false
     end
 
     def mount
@@ -41,7 +49,6 @@ module TimeMachine
     end
 
     def btrfs_subvolume? path
-      return false unless btrfs_volume?
       btrfs_subvolumes.include? path
     end
 
@@ -59,8 +66,7 @@ module TimeMachine
     end
 
     def btrfs_subvolumes
-      return false unless btrfs_volume?
-      `btrfs subvolume list #{@mount_point} | awk '{ print $7 }'`.split
+      `btrfs subvolume list #{@mount_point} 2> /dev/null | awk '{ print $7 }'`.split
     end
 
     def btrfs_snapshot_create src, dst, options={:read_only=>false}
@@ -76,6 +82,11 @@ module TimeMachine
 
     def read_only? path=""
       return nil unless mounted?(path)
+
+      if btrfs_subvolume?(path)
+        !!FileUtils.touch(full_path(path))
+      end
+
       mount_options(path).include? "ro"
     end
 
