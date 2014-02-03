@@ -6,20 +6,21 @@ module TimeMachine
       @mount_point = mount_point
     end
 
-    def mount_options
+    def mount_options path=""
       File.open('/proc/mounts', 'r').each_line do |line|
         details = line.split(" ")
-        next unless details[1] == @mount_point
+        next unless "#{details[1]}/" == full_path(path)
         return details[3].split(",")
       end
-      false
+      nil
     end
 
-    def mounted?
-      !!mount_options
+    def mounted? path=""
+      !mount_options(path).nil?
     end
 
     def mount
+      puts mounted?.inspect
       unless mounted? then
         `mount #{@device} #{@mount_point}`
         $?.success?
@@ -27,7 +28,7 @@ module TimeMachine
     end
 
     def umount
-      return true unless mounted?
+      return nil unless mounted?
       `umount #{@mount_point}`
       $?.success?
     end
@@ -40,21 +41,20 @@ module TimeMachine
     end
 
     def btrfs_subvolume? path
+      return false unless btrfs_volume?
       btrfs_subvolumes.include? path
     end
 
     def btrfs_subvolume_create path
-      return true if btrfs_subvolume?(path)
       return false unless btrfs_volume?
-      full_path = File.join(@mount_point, path)
-      `btrfs subvolume create #{full_path}`
+      return true if btrfs_subvolume?(path)
+      `btrfs subvolume create #{full_path(path)}`
       $?.success?
     end
 
     def btrfs_subvolume_delete path
       return false unless btrfs_subvolume?(path)
-      full_path = File.join(@mount_point, path)
-      `btrfs subvolume delete #{full_path}`
+      `btrfs subvolume delete #{full_path(path)}`
       $?.success?
     end
 
@@ -63,26 +63,35 @@ module TimeMachine
       `btrfs subvolume list #{@mount_point} | awk '{ print $7 }'`.split
     end
 
-    def btrfs_take_snapshot(destination,options={:read_only=>false})
+    def btrfs_snapshot_create src, dst, options={:read_only=>false}
+      return false unless btrfs_subvolume? src
+      return false if btrfs_subvolume? dst
+
       `btrfs subvolume snapshot \
         #{"-r" if options[:read_only]} \
-        #{@device} #{destination}
+        #{full_path src} #{full_path dst}
       `
       $?.success?
     end
 
-    def read_only?
-      return nil unless mounted?
-      mount_options.include? "ro"
+    def read_only? path=""
+      return nil unless mounted?(path)
+      mount_options(path).include? "ro"
     end
 
-    def remount(options)
+    def remount(options) path=""
       return false unless mounted?
       return false unless options.is_a? Array
 
       options.push("remount")
-      `mount -o #{options.join(",")} #{@device} #{@mount_point}`
+      `mount -o #{options.join(",")} #{@device} #{full_path(path)}`
       $?.success?
     end
+
+    private
+    def full_path path
+      File.join(@mount_point, path)
+    end
   end
+
 end
