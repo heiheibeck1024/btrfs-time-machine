@@ -39,16 +39,28 @@ module TimeMachine
       false
     end
 
-    def btrfs_subvolume_create
+    def btrfs_subvolume? path
+      btrfs_subvolumes.include? path
     end
 
-    def btrfs_subvolume_delete
+    def btrfs_subvolume_create path
+      return true if btrfs_subvolume?(path)
+      return false unless btrfs_volume?
+      full_path = File.join(@mount_point, path)
+      `btrfs subvolume create #{full_path}`
+      $?.success?
+    end
+
+    def btrfs_subvolume_delete path
+      return false unless btrfs_subvolume?(path)
+      full_path = File.join(@mount_point, path)
+      `btrfs subvolume delete #{full_path}`
+      $?.success?
     end
 
     def btrfs_subvolumes
       return false unless btrfs_volume?
-      subvolumes = `btrfs_subvolume list #{mount_point} | awk '{ print $7 }'`.split
-      subvolumes.map { |dir| File.join(mount_point, dir) }
+      `btrfs subvolume list #{@mount_point} | awk '{ print $7 }'`.split
     end
 
     def btrfs_take_snapshot(destination,options={:read_only=>false})
