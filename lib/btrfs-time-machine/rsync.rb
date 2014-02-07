@@ -2,6 +2,7 @@ module TimeMachine
   class Rsync
     def initialize(source,config)
       @source = source["source"]
+      @exclusions = source["exclusions"]
       @snapshot = !!source["snapshot"]
       @destination = File.expand_path(
         File.join(config["backup_mount_point"], "/latest", @source)
@@ -63,6 +64,10 @@ module TimeMachine
 
       alert_and_abort "rsync says: I need a source and destination" unless @source && @destination
       alert_and_abort "Could not create #{@destination} directory" unless FileUtils.mkdir_p @destination
+    def exclusions
+      # drop off the ./ because rsync doesn't like em.
+      return @exclusions.map!{|exclusion| exclusion.gsub(/^\.\//, '')}
+    end
 
       # start the backup
       log "Starting the backup:"
