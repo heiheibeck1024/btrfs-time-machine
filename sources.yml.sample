@@ -3,7 +3,7 @@
 - source: '/home/me'
   one-filesystem: true  # restricts sync to the current file system
   exclusions:
-    - 'Dropbox'
+    - './Dropbox'
     - 'tmp'
 
 - source: '/usr/local'
