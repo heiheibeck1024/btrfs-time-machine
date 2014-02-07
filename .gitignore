@@ -1,3 +1,5 @@
 *.swp
 config.yml
 sources.yml
+test/dev/btrfs
+test/dev/ext4
