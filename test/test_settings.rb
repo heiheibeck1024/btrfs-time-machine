@@ -24,7 +24,11 @@ context "#TimeMachine::Settings" do
     "rsync_options" => " --max-size 2G",
     "snapshot_max_age" => 48,
     "sources" => [
-      {"source"=>"/home/me", "one-filesystem"=>true, "exclusions"=>["./Dropbox", "tmp"]},
+      {"source"=>"/home/me",
+        "one-filesystem"=>true,
+        "exclusions"=>["./Dropbox", "tmp"],
+        "rsync_options"=>["--modify-window=1"]
+      },
       {"source"=>"/usr/local", "snapshot"=>true, "exclusions"=>["src"]},
       {"source"=>"/var/spool/mail"},
       {"source"=>"/var/www"},
