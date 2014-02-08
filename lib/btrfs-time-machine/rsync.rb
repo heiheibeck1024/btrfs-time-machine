@@ -2,8 +2,8 @@ module TimeMachine
   class Rsync
     def initialize(source,config)
       @source = source["source"]
-
       @exclusions = source["exclusions"]
+      @rsync_bin = `which rsync`.strip
 
       if source.has_key?("rsync_options")
         @rsync_options = source["rsync_options"]
@@ -21,6 +21,8 @@ module TimeMachine
       # TODO:
       # - make sure that source is a directory
       # - make sure that destination is a btrfs directory
+      # - raise an error if the rsync bin was not found.
+      # - raise an error if destination is unknown
 
     end
 
@@ -44,9 +46,10 @@ module TimeMachine
       options += exclusions.map{|exclusion| "--exclude #{exclusion}"}
     end
 
-    def rsync
+    def run
       src = @source
       src += "/" unless !!@source.match(/\/$/)    # rsync wants a trailing slash.
+      FileUtils.mkdir_p @destination
       `#{@rsync_bin} #{options.join(" ")} #{src} #{@destination}`
       $?.success?
     end
