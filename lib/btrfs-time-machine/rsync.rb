@@ -1,22 +1,9 @@
 module TimeMachine
   class Rsync
-    def initialize(source,config)
-      @source = source["source"]
-      @exclusions = source["exclusions"]
+    def initialize(sources,config)
       @rsync_bin = `which rsync`.strip
-
-      if source.has_key?("rsync_options")
-        @rsync_options = source["rsync_options"]
-      else
-        @rsync_options = []
-      end
-
-      @snapshot = !!source["snapshot"]
-      @one_filesystem = !!source["one-filesystem"]
-
-      @destination = File.expand_path(
-        File.join(config["backup_mount_point"], "/latest", @source)
-      )
+      @sources = sources
+      @config = config
 
       # TODO:
       # - make sure that source is a directory
@@ -26,8 +13,34 @@ module TimeMachine
 
     end
 
-    def options
-      default_options = %w[
+    def run
+      @sources.each do |source|
+        FileUtils.mkdir_p destination
+        `#{command}`
+        return false unless $?.success?
+      end
+    end
+
+    def command source
+      o = options(source).join(" ")
+      d = destination(source)
+      s = source
+
+      # rsync wants a trailing slash.
+      s += "/" unless !!source.match(/\/$/)
+      "#{@rsync_bin} #{o} #{s} #{d}"
+    end
+
+    private
+    def source_settings source
+      @sources.each do |s|
+        return s if s["source"] == source
+      end
+      false
+    end
+
+    def options source
+      options = %w[
         --acls
         --archive
         --delete
@@ -40,25 +53,21 @@ module TimeMachine
         --xattrs
       ]
 
-      options = default_options
-      options += @rsync_options
-      options += ["--one-file-system"] unless @snapshot || @one_filesystem
-      options += exclusions.map{|exclusion| "--exclude #{exclusion}"}
+      settings = source_settings(source)
+      options += settings["rsync_options"]
+
+      if settings["snapshot"] || settings["one-filesystem"]
+        options += ["--one-file-system"] 
+      end
+
+      options += settings["exclusions"].map{|e| "--exclude #{e}"}
+      options.uniq
     end
 
-    def run
-      src = @source
-      src += "/" unless !!@source.match(/\/$/)    # rsync wants a trailing slash.
-      FileUtils.mkdir_p @destination
-      `#{@rsync_bin} #{options.join(" ")} #{src} #{@destination}`
-      $?.success?
+    def destination source
+      File.expand_path(
+        File.join(@config["backup_mount_point"], "/latest", source)
+      )
     end
-
-    private
-    def exclusions
-      # drop off the ./ because rsync doesn't like em.
-      return @exclusions.map!{|exclusion| exclusion.gsub(/^\.\//, '')}
-    end
-
   end
 end
