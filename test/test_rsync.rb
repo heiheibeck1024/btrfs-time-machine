@@ -1,44 +1,71 @@
 require 'test_helper'
 
-settings = TimeMachine::Settings.new({
-  :config => "test/config/config1.yml",
-  :sources => "test/config/sources1.yml"
-})
+sources = YAML.parse(<<-EOF).to_ruby
+- source: '#{DATA_SOURCE}'
+  one-filesystem: true
+  exclusions:
+    - './tmp2'
+    - 'tmp'
+  rsync_options:
+    - "--modify-window=1"
+EOF
+
+config = YAML.parse(<<-EOF).to_ruby
+dest_device_uuid: 'xxxx'
+backup_mount_point: '#{DATA_DESTINATION}'
+log_file: '/dev/null'
+mount_options:
+   - compress
+rsync_options:
+    " --max-size 2G"
+snapshot_max_age: 48
+deduplicate: true
+lock_file: '/var/lock/time_machine'
+alert_email: 'someone@somewhere.com'
+EOF
 
 context "#TimeMachine::Rsync" do
   setup do
-    destination = File.dirname(__FILE__) + "/tmp"
-    source = File.dirname(__FILE__) + "/data/1"
-    
-    %w[home/d tmp tmp2].each {|d| FileUtil::mkdir_p(File.join(source, d))}
-    %w[home/a home/b home/c tmp/a /tmp2/a].each do |f|
-      FileUtil::touch(File.join(source, f))
+    # clean up from last run
+    FileUtils::rm_rf "#{DATA_DESTINATION}/*"
+    FileUtils::mkdir_p DATA_DESTINATION
+    FileUtils::rm_rf File.join(DATA_SOURCE, "/1")
+
+    %w[home/d tmp tmp2].each do |d|
+      FileUtils::mkdir_p(File.join(DATA_SOURCE, "1", d))
     end
 
-    TimeMachine::Rsync.new(settings.sources[0],settings.config)
+    %w[home/a home/b home/c tmp/a /tmp2/a /home/d/a].each do |f|
+      FileUtils::touch(File.join(DATA_SOURCE, "1", f))
+    end
+
+    TimeMachine::Rsync.new(sources[0],config)
   end
 
-  asserts("has correct number of options") {topic.options.size}.equals 11
+  asserts("has correct number of options") {topic.options.size}.equals 13
+  asserts("has '--modify-window=1'") {topic.options.include? '--modify-window=1'}
+  asserts("has source directory'") {File.directory? DATA_SOURCE}
+  asserts("has source data'") {File.exist?(File.join(DATA_SOURCE,"1/home/a"))}
+  asserts("has destination directory'") {File.directory? DATA_DESTINATION}
 
-  context "run an rsync" do
-    hookup {topic.rsync}
-    asserts("excluded relative path does not exist") {!Dir.exist?().include? "test"}
-    asserts("has test subvolume")   {topic.btrfs_subvolumes.include? "test"}
-    asserts("subvolume is mounted") {topic.mounted? "test"}
+  context "should run" do
+    hookup {
+      @backup_dir = File.join(DATA_DESTINATION, "latest", DATA_SOURCE, "1")
+      puts @backup_dir
+      topic.run
+    }
+
+    %w[ /home/a /home/b /home/c /home/d/a ].each do |f|
+      asserts("that it does back up #{f}") {
+        File.exist?(File.join(@backup_dir, f))
+      }
+    end
+
+    %w[ /tmp/a /tmp2/a ].each do |f|
+      asserts("that it excludes #{f}") {
+        !File.exist?(File.join(@backup_dir, f))
+      }
+    end
   end
 
-  # make sure that /tmp/a does not exist
-  # make sure that /tmp2/a does not exist
-
-  # make sure that /home/a does exist
-  # make sure that /home/b does exist
-  # make sure that /home/c does exist
-
-  # make sure that /home/d/a does exist
-
-  teardown do
-    FileUtil::rm_r File.join(source, "*")
-  end
 end
-
-
