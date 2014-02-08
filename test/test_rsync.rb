@@ -1,6 +1,6 @@
 require 'test_helper'
 
-sources = YAML.parse(<<-EOF).to_ruby
+SOURCES = YAML.parse(<<-EOF).to_ruby
 - source: '#{DATA_SOURCE}'
   one-filesystem: true
   exclusions:
@@ -10,7 +10,7 @@ sources = YAML.parse(<<-EOF).to_ruby
     - "--modify-window=1"
 EOF
 
-config = YAML.parse(<<-EOF).to_ruby
+CONFIG = YAML.parse(<<-EOF).to_ruby
 dest_device_uuid: 'xxxx'
 backup_mount_point: '#{DATA_DESTINATION}'
 log_file: '/dev/null'
@@ -26,32 +26,26 @@ EOF
 
 context "#TimeMachine::Rsync" do
   setup do
-    # clean up from last run
-    FileUtils::rm_rf "#{DATA_DESTINATION}/*"
-    FileUtils::mkdir_p DATA_DESTINATION
-    FileUtils::rm_rf File.join(DATA_SOURCE, "/1")
-
-    %w[home/d tmp tmp2].each do |d|
-      FileUtils::mkdir_p(File.join(DATA_SOURCE, "1", d))
-    end
-
-    %w[home/a home/b home/c tmp/a /tmp2/a /home/d/a].each do |f|
-      FileUtils::touch(File.join(DATA_SOURCE, "1", f))
-    end
-
-    TimeMachine::Rsync.new(sources[0],config)
+    destroy_source_data
+    setup_source_data
+    TimeMachine::Rsync.new(SOURCES,CONFIG)
   end
 
-  asserts("has correct number of options") {topic.options.size}.equals 13
-  asserts("has '--modify-window=1'") {topic.options.include? '--modify-window=1'}
+  asserts("generates an Rsync object") {topic.is_a? TimeMachine::Rsync}
   asserts("has source directory'") {File.directory? DATA_SOURCE}
   asserts("has source data'") {File.exist?(File.join(DATA_SOURCE,"1/home/a"))}
   asserts("has destination directory'") {File.directory? DATA_DESTINATION}
 
+  context "command for #{DATA_SOURCE}" do
+    setup { topic.command(DATA_SOURCE) }
+    %w[ --one-file-system --modify-window=1 --archive ].each do |switch|
+      asserts("should have #{switch}") {!!topic.match(switch)}
+    end
+  end
+
   context "should run" do
     hookup {
       @backup_dir = File.join(DATA_DESTINATION, "latest", DATA_SOURCE, "1")
-      puts @backup_dir
       topic.run
     }
 
@@ -66,6 +60,9 @@ context "#TimeMachine::Rsync" do
         !File.exist?(File.join(@backup_dir, f))
       }
     end
+
+    # TODO: check permissions of top level directory.
+
   end
 
 end
