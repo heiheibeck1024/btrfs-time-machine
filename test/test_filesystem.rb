@@ -2,6 +2,7 @@ require 'test_helper'
 
 context "#TimeMachine::FileSystem - btrfs filesystem" do
   setup {
+    setup_file_systems
     TimeMachine::FileSystem.new(BTRFS_FS, MOUNT_POINT)
   }
 
