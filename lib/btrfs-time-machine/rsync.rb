@@ -16,9 +16,11 @@ module TimeMachine
     def run
       @sources.each do |source|
         FileUtils.mkdir_p destination
-        `#{command}`
-        return false unless $?.success?
+        cmd = Mixlib::ShellOut(command)
+        cmd.run_command
+        return false unless cmd.status.to_i.zero?
       end
+      true
     end
 
     def command source

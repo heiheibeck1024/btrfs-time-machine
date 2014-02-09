@@ -1,7 +1,0 @@
-- source: '/media/sf_Repos/btrfs-time-machine/test/data/1'
-  one-filesystem: true
-  exclusions:
-    - './tmp2'
-    - 'tmp'
-  rsync_options:
-    - "--modify-window=1"
