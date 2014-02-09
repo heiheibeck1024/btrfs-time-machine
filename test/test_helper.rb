@@ -1,18 +1,36 @@
-require 'rubygems'
+require 'mixlib/shellout'
 require 'riot'
+require 'rubygems'
 
 $:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib/btrfs-time-machine')
 
-BTRFS_FS = File.join(File.dirname(__FILE__), "dev/btrfs")
-EXT4_FS = File.join(File.dirname(__FILE__), "dev/ext4")
-MOUNT_POINT = File.join(File.dirname(__FILE__), "mnt")
-DATA_SOURCE = "/tmp/tm-src"
-DATA_DESTINATION = "/tmp/tm-dest"
+BTRFS_FS = "/tmp/test-tm/dev/btrfs"
+EXT4_FS = "/tmp/test-tm/dev/ext4"
+MOUNT_POINT = "/tmp/test-tm/mnt"
+TEST_DATA = "/tmp/test-tm/src"
 
 require 'filesystem'
 require 'rsync'
 require 'settings'
+
+def setup_file_systems
+  FileUtils.mkdir_p(MOUNT_POINT)
+
+  [ BTRFS_FS, EXT4_FS ].each do |dev|
+    FileUtils.mkdir_p(File.dirname(dev))
+  end
+
+  unless File.exist?(BTRFS_FS)
+    Mixlib::ShellOut.new("dd if=/dev/zero of=#{BTRFS_FS} bs=1MB count=100").run_command
+    Mixlib::ShellOut.new("mkfs.btrfs #{BTRFS_FS}").run_command
+  end
+
+  unless File.exist?(EXT4_FS)
+    Mixlib::ShellOut.new("dd if=/dev/zero of=#{EXT4_FS} bs=1MB count=100").run_command
+    Mixlib::ShellOut.new("mkfs.ext4 -F #{EXT4_FS}").run_command
+  end
+end
 
 def setup_source_data
   directories = %w[
