@@ -32,7 +32,7 @@ def setup_file_systems
   end
 end
 
-def setup_source_data
+def create_data
   directories = %w[
     home/d
     tmp
@@ -49,16 +49,17 @@ def setup_source_data
   ]
 
   directories.each do |d|
-    FileUtils::mkdir_p(File.join(DATA_SOURCE, "1", d))
+    FileUtils::mkdir_p(File.join(TEST_DATA, d))
   end
 
   files.each do |f|
-    FileUtils::touch(File.join(DATA_SOURCE, "1", f))
+    FileUtils::touch(File.join(TEST_DATA, f))
   end
 end
 
-def destroy_source_data
-  FileUtils::rm_rf "#{DATA_DESTINATION}/*"
-  FileUtils::mkdir_p DATA_DESTINATION
-  FileUtils::rm_rf File.join(DATA_SOURCE, "/1")
+def destroy_data
+  FileUtils::rm_rf MOUNT_POINT
+  FileUtils::rm_rf TEST_DATA
+  FileUtils::mkdir_p MOUNT_POINT
+  FileUtils::mkdir_p TEST_DATA
 end

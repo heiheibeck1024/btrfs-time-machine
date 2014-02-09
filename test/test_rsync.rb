@@ -1,43 +1,42 @@
 require 'test_helper'
 
-SOURCES = YAML.parse(<<-EOF).to_ruby
-- source: '#{DATA_SOURCE}'
-  one-filesystem: true
-  exclusions:
-    - './tmp2'
-    - 'tmp'
-  rsync_options:
-    - "--modify-window=1"
+SOURCES = YAML.parse(<<-EOF.gsub(/^\s{2}/, '')).to_ruby
+  - source: '#{TEST_DATA}'
+    one-filesystem: true
+    exclusions:
+      - './tmp2'
+      - 'tmp'
+    rsync_options:
+      - "--modify-window=1"
 EOF
 
-CONFIG = YAML.parse(<<-EOF).to_ruby
-dest_device_uuid: 'xxxx'
-backup_mount_point: '#{DATA_DESTINATION}'
-log_file: '/dev/null'
-mount_options:
-   - compress
-rsync_options:
-    " --max-size 2G"
-snapshot_max_age: 48
-deduplicate: true
-lock_file: '/var/lock/time_machine'
-alert_email: 'someone@somewhere.com'
+CONFIG = YAML.parse(<<-EOF.gsub(/^\s{2}/, '')).to_ruby
+  dest_device_uuid: 'xxxx'
+  backup_mount_point: '#{MOUNT_POINT}'
+  log_file: '/dev/null'
+  mount_options:
+     - compress
+  rsync_options:
+      " --max-size 2G"
+  snapshot_max_age: 48
+  deduplicate: true
+  lock_file: '/var/lock/time_machine'
+  alert_email: 'someone@somewhere.com'
 EOF
 
 context "#TimeMachine::Rsync" do
   setup do
-    destroy_source_data
-    setup_source_data
+    create_data
     TimeMachine::Rsync.new(SOURCES,CONFIG)
   end
 
   asserts("generates an Rsync object") {topic.is_a? TimeMachine::Rsync}
-  asserts("has source directory'") {File.directory? DATA_SOURCE}
-  asserts("has source data'") {File.exist?(File.join(DATA_SOURCE,"1/home/a"))}
-  asserts("has destination directory'") {File.directory? DATA_DESTINATION}
+  asserts("has source directory'") {File.directory? TEST_DATA}
+  asserts("has source data'") {File.exist?(File.join(TEST_DATA,"home/a"))}
+  asserts("has destination directory'") {File.directory? MOUNT_POINT}
 
-  context "command for #{DATA_SOURCE}" do
-    setup { topic.command(DATA_SOURCE) }
+  context "command for #{TEST_DATA}" do
+    setup { topic.command(TEST_DATA) }
     %w[ --one-file-system --modify-window=1 --archive ].each do |switch|
       asserts("should have #{switch}") {!!topic.match(switch)}
     end
@@ -45,7 +44,7 @@ context "#TimeMachine::Rsync" do
 
   context "should run" do
     hookup {
-      @backup_dir = File.join(DATA_DESTINATION, "latest", DATA_SOURCE, "1")
+      @backup_dir = File.join(MOUNT_POINT, "latest", TEST_DATA)
       topic.run
     }
 
@@ -63,6 +62,7 @@ context "#TimeMachine::Rsync" do
 
     # TODO: check permissions of top level directory.
 
+    teardown { destroy_data }
   end
 
 end
