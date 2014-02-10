@@ -1,6 +1,7 @@
 require 'mixlib/shellout'
 require 'riot'
 require 'rubygems'
+require 'yaml'
 
 $:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib/btrfs-time-machine')
