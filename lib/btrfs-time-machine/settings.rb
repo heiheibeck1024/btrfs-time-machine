@@ -5,10 +5,10 @@ module TimeMachine
     def initialize config
       @config = config
 
-      @config["sources"].each do |s|
-        # drop the ./ of exclusions because rsync doesn't like em.
-        s["exclusions"].map!{|e| e.gsub(/^\.\//, '') } if s.has_key?("exclusions")
-      end
+      #@config["sources"].each do |s|
+      #  # drop the ./ of exclusions because rsync doesn't like em.
+      #  s["exclusions"].map!{|e| e.gsub(/^\.\//, '') } if s.has_key?("exclusions")
+      #end
     end
 
     def global_settings
@@ -24,18 +24,14 @@ module TimeMachine
       global_settings.each do |k,v|
         case v.class.to_s
           when "Hash"
-            s[k] ||= {}
+            raise "haven't written a handler for a hash yet..."
           when "Array"
             s[k] ||= []
             s[k] += v
-          when "String"
+          when "String" || "FixNum"
             s[k] ||= v
-          when "Fixnum"
-            s[k] ||= v
-          when "TrueClass"
+          when "TrueClass" || "FalseClass"
             s[k] = v unless s.include?(k)
-          when "FalseClass"
-            s[k] = v unless s.has_key?(k)
         end
       end
 
@@ -43,12 +39,14 @@ module TimeMachine
       s
     end
 
-    def to_hash
-      @config
+    def sources
+      return [] unless @config.has_key?("sources")
+      @config["sources"].map {|s| s["path"] }
     end
 
-    def sources
-      @config["sources"].map {|s| s["source"] }
+    def add_source source
+      @config["sources"] = [] unless @config.has_key?("sources")
+      @config["sources"].push source
     end
 
     def rsync_options source
