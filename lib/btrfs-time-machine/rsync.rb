@@ -28,48 +28,16 @@ module TimeMachine
       d = destination(source)
       s = source
 
+      ## TODO: fix this
+      ## if source is a directory make sure it's got a trailing slash
+      #if !File.directory?(s["source"]) && File.exist?(s["source"]) && !!s["source"].match(/\/$/)
+      #  s["source"] = s["source"] + "/" 
+      #end
+
       # rsync wants a trailing slash.
-      s += "/" unless !!source.match(/\/$/)
       "#{@rsync_bin} #{o} #{s} #{d}"
     end
 
     private
-    def source_settings source
-      @sources.each do |s|
-        return s if s["source"] == source
-      end
-      false
-    end
-
-    def options source
-      options = %w[
-        --acls
-        --archive
-        --delete
-        --delete-excluded
-        --human-readable
-        --inplace
-        --no-whole-file
-        --numeric-ids
-        --verbose
-        --xattrs
-      ]
-
-      settings = source_settings(source)
-      options += settings["rsync_options"]
-
-      if settings["snapshot"] || settings["one-filesystem"]
-        options += ["--one-file-system"] 
-      end
-
-      options += settings["exclusions"].map{|e| "--exclude #{e}"}
-      options.uniq
-    end
-
-    def destination source
-      File.expand_path(
-        File.join(@config["backup_mount_point"], "/latest", source)
-      )
-    end
   end
 end
