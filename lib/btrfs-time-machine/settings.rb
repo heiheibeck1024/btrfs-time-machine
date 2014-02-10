@@ -38,7 +38,9 @@ module TimeMachine
             s[k] = v unless s.has_key?(k)
         end
       end
-      return s
+
+      s["destination"] = File.join(s["backup_mount_point"], "/latest", source)
+      s
     end
 
     def to_hash
@@ -47,10 +49,6 @@ module TimeMachine
 
     def sources
       @config["sources"].map {|s| s["source"] }
-    end
-
-    def destination source
-      File.join(@config["backup_mount_point"], "/latest", source)
     end
 
     def rsync_options source

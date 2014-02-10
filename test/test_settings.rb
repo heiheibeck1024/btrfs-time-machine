@@ -34,7 +34,6 @@ context "#TimeMachine::Settings" do
   asserts_topic.kind_of TimeMachine::Settings
   asserts("to_hash") {topic.to_hash}.kind_of Hash
   asserts("sources") {topic.sources}.kind_of Array
-  asserts("destination") {topic.destination(TEST_DATA)}.equals File.join(MOUNT_POINT, "latest", TEST_DATA)
 
   context "sources" do
     asserts("size") {topic.sources.size}.equals 3
@@ -61,6 +60,7 @@ context "#TimeMachine::Settings" do
     asserts("has global rsync_options") {topic.source_settings(TEST_DATA)["rsync_options"].include?("--max-size 2G")}
     asserts("has source one-filesystem"){topic.source_settings(TEST_DATA)["one-filesystem"]}
     asserts("has source rsync_options") {topic.source_settings(TEST_DATA)["rsync_options"].include?("--modify-window=1")}
+    asserts("has destination") {topic.source_settings(TEST_DATA)["destination"]}.equals "#{MOUNT_POINT}/latest/tmp/test-tm/src"
   end
 
   context "rsync_options for #{TEST_DATA}" do
