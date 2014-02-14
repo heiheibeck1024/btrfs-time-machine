@@ -1,11 +1,21 @@
-# the unique identifier for the BTRFS partition (from `btrfs filesystem show`)
+# the unique identifier for the destination BTRFS partition (from `btrfs filesystem show`)
 dest_device_uuid: 'e080ac83-fbb7-489e-b5c5-6135d4b2e0b9'
 
 # where you mount your backup
 backup_mount_point: '/srv/btrfs_backups'
 
+# subfolder of the destination file system to put the backups into
+dest_subfolder: 'backups'
+
+# mount the device?
+# if true, the device will be mounted
+# if false, it is assumed that the destination device is already mounted
+# and the backups will be stored in backup_mount_point/dest_subfolder
+# we recommend using a distinct device for the backups
+mount_dest_device: true
+
 # log file
-log_file: '/var/log/time_machine.log'
+log_file: '/var/log/timemachine.log'
 # for per-backup logfiles, %d will be replaced with the date
 #log_file: '/var/log/timemachine/timemachine-%d.log'
 
