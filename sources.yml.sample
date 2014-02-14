@@ -11,6 +11,9 @@
   snapshot: true
   exclusions:
     - 'src'
+  inclusions: # don't exclude those files/folders
+    - 'src/app'
+    - 'src/img'
 
 - source '/var/spool/mail'
 - source '/var/www'
