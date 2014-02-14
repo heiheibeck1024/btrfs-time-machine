@@ -180,7 +180,7 @@ def rsync
       rsync_opts += ' ' + @rsync_options.join(' ')
     end
 
-  unless src_data['rsync_options'].nil?
+    unless src_data['rsync_options'].nil?
       rsync_opts += ' ' + src_data['rsync_options'].join(' ')
     end
 
