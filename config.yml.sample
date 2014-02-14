@@ -4,6 +4,9 @@ dest_device_uuid: 'e080ac83-fbb7-489e-b5c5-6135d4b2e0b9'
 # where you mount your backup
 backup_mount_point: '/srv/btrfs_backups'
 
+# subfolder to put the backups into
+dest_subfolder: 'backups'
+
 # log file
 log_file: '/var/log/time_machine.log'
 # for per-backup logfiles, %d will be replaced with the date

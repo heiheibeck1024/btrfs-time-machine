@@ -51,14 +51,16 @@ raise "Sources file: `#{SOURCES}' could not be found" unless File.exist? SOURCES
 cfg = YAML.load_file(CONFIG)
 @sources = YAML.load_file(SOURCES)
 @dest_device_uuid = cfg['dest_device_uuid']
+@dest_subfolder = cfg['dest_subfolder']
 @backup_mount_point = cfg['backup_mount_point']
 @log_file = cfg['log_file'].gsub("%d",Time.now.strftime("%Y%m%d_%H%M%S"))
 @device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
-@snapshot_dir = "#{@backup_mount_point}/snapshots"
+@snapshot_dir = "#{backup_path}/snapshots"
 @snapshot_max_age = cfg['snapshot_max_age']
 @lock_file = cfg['lock_file']
 @hostname = `hostname -s`.strip
 @email = cfg['alert_email'] || nil
+
 
 @rsync_options = cfg['rsync_options']
 @mount_options = cfg['mount_options']
@@ -79,6 +81,20 @@ end
 
 def unlock FileUtils.rm @lock_file end
 def locked? File.exist? @lock_file end
+
+def backup_path
+  @dest_subfolder = no_trailing_slash(@dest_subfolder)
+  @backup_path ||=
+  if @dest_subfolder.empty?
+    @backup_mount_point
+  else
+    File.join(@backup_mount_point, @dest_subfolder)
+  end
+end
+
+def no_trailing_slash(str)
+    str.sub(/(\/)+$/, '')
+end
 
 def log(message)
   date = Time.now.asctime
@@ -159,7 +175,7 @@ end
 def rsync
   @sources.each do |src_data|
     src = src_data['source']
-    dst = File.expand_path("#{@backup_mount_point}/latest/#{src}")
+    dst = File.expand_path("#{backup_path}/latest/#{src}")
     # XXX Consider an explicit enum, with btrfs, lvm and dm-thin snapshots.
     if src_data['snapshot']
       do_snapshot_src = true
@@ -231,7 +247,7 @@ def btrfs_snapshot
 
   log "Creating file system snapshot."
   alert_and_abort "A snapshot by that name already exists" if File.directory?("#{@snapshot_dir}/#{date}")
-  `sudo btrfs subvolume snapshot -r #{@backup_mount_point}/latest '#{@snapshot_dir}/#{date}' >> #{@log_file} 2>&1`        # TODO: make logging better
+  `sudo btrfs subvolume snapshot -r #{backup_path}/latest '#{@snapshot_dir}/#{date}' >> #{@log_file} 2>&1`        # TODO: make logging better
   $?.success?
 end
 
@@ -261,7 +277,7 @@ btrfs_scan
 mount @device, @backup_mount_point
 
 # backup filesystem needs to be btrfs for snapshots.
-path = File.join(@backup_mount_point, "latest")
+path = File.join(backup_path, "latest")
 unless btrfs_volume? path
   alert_and_abort "Subvolume was not found at `#{path}'. Try running `btrfs subvolume create #{path}'."
 end
@@ -272,7 +288,7 @@ rsync
 
 if @deduplicate
   log "Will dedup"
-  `sudo bedup dedup --flush -- #{@backup_mount_point}/latest >> #{@log_file} 2>&1`
+  `sudo bedup dedup --flush -- #{backup_path}/latest >> #{@log_file} 2>&1`
   alert_and_abort "Could not deduplicate" unless $?.success?
 else
   log "dedup not enabled"
