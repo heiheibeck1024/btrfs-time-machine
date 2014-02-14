@@ -56,6 +56,22 @@ cfg = YAML.load_file(CONFIG)
 @backup_mount_point = cfg['backup_mount_point']
 @log_file = cfg['log_file'].gsub("%d",Time.now.strftime("%Y%m%d_%H%M%S"))
 @device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
+
+def no_trailing_slash(str)
+  str ||= ''
+  str.sub(/(\/)+$/, '')
+end
+
+def backup_path
+  @dest_subfolder = no_trailing_slash(@dest_subfolder)
+  @backup_path ||=
+  if @dest_subfolder.empty?
+    @backup_mount_point
+  else
+    File.join(@backup_mount_point, @dest_subfolder)
+  end
+end
+
 @snapshot_dir = "#{backup_path}/snapshots"
 @snapshot_max_age = cfg['snapshot_max_age']
 @lock_file = cfg['lock_file']
@@ -80,21 +96,12 @@ def lock
   FileUtils.touch @lock_file
 end
 
-def unlock FileUtils.rm @lock_file end
-def locked? File.exist? @lock_file end
-
-def backup_path
-  @dest_subfolder = no_trailing_slash(@dest_subfolder)
-  @backup_path ||=
-  if @dest_subfolder.empty?
-    @backup_mount_point
-  else
-    File.join(@backup_mount_point, @dest_subfolder)
-  end
+def unlock
+  FileUtils.rm @lock_file
 end
 
-def no_trailing_slash(str)
-    str.sub(/(\/)+$/, '')
+def locked?
+  File.exist? @lock_file
 end
 
 def log(message)
