@@ -66,7 +66,7 @@ cfg = YAML.load_file(CONFIG)
 
 @alerts = [] # an empty array to store alerts that will be emailed
 
-def lock()
+def lock
   if locked?
     message = "It seems another backup is still running, or previous backup did not complete.  If you are sure that there are no backups currently running then try deleting the lockfile at `#{@lock_file}'."
 
@@ -77,8 +77,8 @@ def lock()
   FileUtils.touch @lock_file
 end
 
-def unlock() FileUtils.rm @lock_file end
-def locked?() File.exist? @lock_file end
+def unlock FileUtils.rm @lock_file end
+def locked? File.exist? @lock_file end
 
 def log(message)
   date = Time.now.asctime
@@ -102,7 +102,7 @@ def alert_and_abort(message)
   exit 1
 end
 
-def send_alerts()
+def send_alerts
   return 0 if @email.nil? || @alerts.count == 0
 
   subject = "BTRFS Time Machine failed on #{@hostname}"
@@ -212,7 +212,7 @@ def rsync
   end
 end
 
-def btrfs_scan()
+def btrfs_scan
   `sudo btrfs device scan >> #{@log_file} 2>&1`
 end
 
