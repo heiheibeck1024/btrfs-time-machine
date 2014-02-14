@@ -195,6 +195,13 @@ def rsync
       end
     end
 
+    if src_data.key? 'inclusions'
+      src_data['inclusions'].each do |inclusion|
+        inclusion.gsub!(/^\.\//, '')                  # drop off the ./ because rsync doesn't like em.
+        rsync_opts += " --include '#{inclusion}'"
+      end
+    end
+
     alert_and_abort "rsync says: I need a source and destination" unless src && dst
     alert_and_abort "Could not create #{dst} directory" unless FileUtils.mkdir_p dst
 
