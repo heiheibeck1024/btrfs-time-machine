@@ -52,6 +52,7 @@ cfg = YAML.load_file(CONFIG)
 @sources = YAML.load_file(SOURCES)
 @dest_device_uuid = cfg['dest_device_uuid']
 @dest_subfolder = cfg['dest_subfolder']
+@mount_dest_device = cfg['mount_dest_device'].nil? ? true : cfg['mount_dest_device']
 @backup_mount_point = cfg['backup_mount_point']
 @log_file = cfg['log_file'].gsub("%d",Time.now.strftime("%Y%m%d_%H%M%S"))
 @device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
@@ -274,7 +275,7 @@ log "BTRFS time machine version #{VER} started."
 btrfs_scan
 
 # mount the backup filesystem
-mount @device, @backup_mount_point
+mount @device, @backup_mount_point if @mount_dest_device
 
 # backup filesystem needs to be btrfs for snapshots.
 path = File.join(backup_path, "latest")
@@ -282,7 +283,7 @@ unless btrfs_volume? path
   alert_and_abort "Subvolume was not found at `#{path}'. Try running `btrfs subvolume create #{path}'."
 end
 
-remount_as "rw", @device, @backup_mount_point
+remount_as "rw", @device, @backup_mount_point if @mount_dest_device
 
 rsync
 
@@ -296,7 +297,7 @@ end
 
 btrfs_snapshot
 btrfs_snapshot_rotate
-remount_as "ro", @device, @backup_mount_point
+remount_as "ro", @device, @backup_mount_point if @mount_dest_device
 
 log "Finished Successfully!"
 send_alerts
