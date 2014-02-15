@@ -9,11 +9,12 @@
 - source: '/usr/local'
 # snapshot implies one-filesystem
   snapshot: true
-  exclusions:
-    - 'src'
-  inclusions: # don't exclude those files/folders
-    - 'src/app'
-    - 'src/img'
+  exclusions:           # exclusion patterns - they are applied recursively to subdirectories. preceding / is like regex delimiter ^ (i.e. relative to currently synced directory)
+    - '/some_folder/'   # always have a trailing slash with folders in exclusion and inclusion
+    - '/src/*'          # if you want to include some of its subdirectories, an asterisk * is required
+  inclusions:           # don't exclude those files/folders (patterns)
+    - '/src/app/'
+    - '/src/img/
 
 - source '/var/spool/mail'
 - source '/var/www'
