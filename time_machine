@@ -231,7 +231,7 @@ def rsync
 
     # start the backup
     log "Starting the backup:"
-    rsync_cmd="sudo #{rsync} #{rsync_opts} #{src2}/ #{dst} >> #{@log_file} 2>&1" # src needs a trailing slash on dir or it'll go in wrong dir.
+    rsync_cmd="sudo #{rsync} #{rsync_opts} #{no_trailing_slash(src2)}/ #{dst} >> #{@log_file} 2>&1" # src needs a trailing slash on dir or it'll go in wrong dir.
     log "Running '#{rsync_cmd}'"
     `#{rsync_cmd}`
     rsync_failed = ! $?.success?
