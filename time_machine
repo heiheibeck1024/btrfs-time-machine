@@ -212,17 +212,17 @@ def rsync
       rsync_opts += ' -x'
     end
 
-    if src_data.key? 'exclusions' then
-      src_data['exclusions'].each do |exclusion|
-        exclusion.gsub!(/^\.\//, '')                  # drop off the ./ because rsync doesn't like em.
-        rsync_opts += " --exclude '#{exclusion}'"
-      end
-    end
-
     if src_data.key? 'inclusions'
       src_data['inclusions'].each do |inclusion|
         inclusion.gsub!(/^\.\//, '')                  # drop off the ./ because rsync doesn't like em.
         rsync_opts += " --include '#{inclusion}'"
+      end
+    end
+
+    if src_data.key? 'exclusions' then
+      src_data['exclusions'].each do |exclusion|
+        exclusion.gsub!(/^\.\//, '')                  # drop off the ./ because rsync doesn't like em.
+        rsync_opts += " --exclude '#{exclusion}'"
       end
     end
 
