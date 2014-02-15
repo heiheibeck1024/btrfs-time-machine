@@ -183,7 +183,7 @@ end
 def rsync
   @sources.each do |src_data|
     src = src_data['source']
-    dst = File.expand_path("#{backup_path}/latest/#{src}")
+    dst = File.expand_path("#{backup_path}/latest/#{src == '/' ? 'root' : src}")
     # XXX Consider an explicit enum, with btrfs, lvm and dm-thin snapshots.
     if src_data['snapshot']
       do_snapshot_src = true
