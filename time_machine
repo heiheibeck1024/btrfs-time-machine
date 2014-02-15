@@ -187,7 +187,7 @@ def rsync
     # XXX Consider an explicit enum, with btrfs, lvm and dm-thin snapshots.
     if src_data['snapshot']
       do_snapshot_src = true
-      src2 = "#{src}/ro-snapshot"
+      src2 = File.join(src, "ro-snapshot")
       if File.exist? src2
         alert_and_abort "read-only source snapshot already exists at #{src2}"
       end
