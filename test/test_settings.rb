@@ -61,11 +61,9 @@ context "#TimeMachine::Settings" do
 
       denies(:global_settings).empty
       asserts(:sources).size(1)
-
-      context "data" do
-        setup {topic.source_settings(topic.sources.first)}
-        asserts("path") {topic}.equals "/a/test"
-      end
+      asserts(:sources).kind_of Array
+      asserts(:sources).equals ["/a/test"]
+      asserts("path") {topic.source_settings("/a/test")}.kind_of Hash
     end
   end
 end
