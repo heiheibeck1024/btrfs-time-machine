@@ -48,7 +48,10 @@ module TimeMachine
       options = {}
       sources.each do |s|
         raise "#{s} is an invalid source." unless valid_source?(s)
-        options[s] = rsync_options(s) + rsync_extras(s) + rsync_exclusions(s)
+        options[s] = rsync_options(s)
+        options[s] += rsync_extras(s)
+        options[s] += rsync_inclusions(s)
+        options[s] += rsync_exclusions(s)
         options[s].uniq!
       end
       options
@@ -91,6 +94,11 @@ module TimeMachine
     def rsync_exclusions source
       settings = @settings.source_settings(source)
       settings["exclusions"].map{|e| "--exclude #{e}"}
+    end
+
+    def rsync_inclusions source
+      settings = @settings.source_settings(source)
+      settings["inclusions"].map{|e| "--include #{e}"}
     end
 
   end
