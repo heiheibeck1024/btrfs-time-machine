@@ -27,10 +27,9 @@ module TimeMachine
 
     def commands
       cmds = []
-      @settings.sources.each do |source|
-        settings = @settings.source_settings(source)
-        rsync_options = settings["rsync_options"]
-        destination = settings["destination"]
+
+      options.each do |s,o|
+        d = @settings.source_settings(s)["destination"]
 
         ## TODO: fix this
         ## if source is a directory make sure it's got a trailing slash
@@ -38,7 +37,7 @@ module TimeMachine
         #  s["source"] = s["source"] + "/" 
         #end
 
-        cmds.push( {source => [@rsync_bin, options, destination].join(" ")} )
+        cmds.push([@rsync_bin, o, d].join(" "))
       end
       cmds
     end
