@@ -43,18 +43,17 @@ context "#TimeMachine::Settings" do
     context "sources settings" do
       hookup do
         topic.add_source(YAML.parse(<<-EOF).to_ruby
-          sources:
-            - path: '/a/test'
-              String: 'string'
-              Fixnum: 2
-              TrueClass: true
-              FalseClass: false
-              Hash:
-                a: 'a'
-                b: 'b'
-              Array:
-                - "a"
-                - "b"
+          path: '/a/test'
+          String: 'string'
+          Fixnum: 2
+          TrueClass: true
+          FalseClass: false
+          Hash:
+            b: 'bb'
+            c: 'c'
+          Array:
+            - "a"
+            - "b"
           EOF
         )
       end
