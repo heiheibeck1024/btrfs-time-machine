@@ -187,6 +187,19 @@ context "#TimeMachine::Settings" do
         asserts("inclusions") {@settings["inclusions"]}.size 2
         asserts("inclusions") {@settings["inclusions"]}.includes "/tmp/a"
         asserts("inclusions") {@settings["inclusions"]}.includes "/tmp/b"
+        asserts("destination"){@settings["destination"]}.equals "/tmp/something/latest/e/test"
+      end
+
+      context "source settings when backing up root" do
+        hookup do
+          topic.add_source(YAML.parse(<<-EOF).to_ruby
+            path: '/'
+            EOF
+          )
+          @settings = topic.source_settings("/")
+        end
+
+        asserts("destination") {@settings["destination"]}.equals "/tmp/something/latest/root"
       end
     end
   end
