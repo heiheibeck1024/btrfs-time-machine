@@ -159,21 +159,5 @@ context "#TimeMachine::Settings" do
       asserts("add_source without path") {topic.add_source({})}.raises(RuntimeError, 'Your config must include \'path\'.')
       asserts("add_source with existing path") {topic.add_source({'path' => '/tmp/primed'})}.raises(RuntimeError, 'You already have a source at that path')
     end
-    
-    #config = YAML.parse(<<-EOF).to_ruby
-    #  String: 'string'
-    #  Fixnum: 2
-    #  TrueClass: true
-    #  FalseClass: false
-    #  Hash:
-    #    a: 'a'
-    #    b: 'b'
-    #  Array:
-    #    - "a"
-    #    - "b"
-    #  backup_mount_point: /tmp/something
-    #EOF
-    #TimeMachine::Settings.new(config)
   end
 end
-
