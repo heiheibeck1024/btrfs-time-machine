@@ -81,6 +81,7 @@ context "#TimeMachine::Settings" do
         asserts("Array") {@settings["Array"]}.equals ['a', 'b' ]
         asserts("backup_mount_point") {@settings["backup_mount_point"]}.equals "/tmp/something"
         asserts("exclusions") {@settings["exclusions"]}.empty
+        asserts("inclusions") {@settings["inclusions"]}.empty
       end
 
       context "includes new source settings" do
@@ -148,6 +149,12 @@ context "#TimeMachine::Settings" do
         asserts("exclusions") {@settings["exclusions"]}.empty
       end
 
+      context "source settings without inclusions" do
+        hookup { @settings = topic.source_settings("/d/test") }
+        asserts("exclusions") {@settings["inclusions"]}.kind_of Array
+        asserts("exclusions") {@settings["inclusions"]}.empty
+      end
+
       context "source settings with exclusions" do
         hookup do
           topic.add_source(YAML.parse(<<-EOF).to_ruby
@@ -163,6 +170,23 @@ context "#TimeMachine::Settings" do
         asserts("exclusions") {@settings["exclusions"]}.size 2
         asserts("exclusions") {@settings["exclusions"]}.includes "/tmp/a"
         asserts("exclusions") {@settings["exclusions"]}.includes "/tmp/b"
+      end
+
+      context "source settings with inclusions" do
+        hookup do
+          topic.add_source(YAML.parse(<<-EOF).to_ruby
+            path: '/e/test'
+            inclusions:
+              - "/tmp/a"
+              - "/tmp/b"
+            EOF
+          )
+          @settings = topic.source_settings("/e/test")
+        end
+
+        asserts("inclusions") {@settings["inclusions"]}.size 2
+        asserts("inclusions") {@settings["inclusions"]}.includes "/tmp/a"
+        asserts("inclusions") {@settings["inclusions"]}.includes "/tmp/b"
       end
     end
   end
