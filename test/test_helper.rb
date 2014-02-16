@@ -4,16 +4,13 @@ require 'rubygems'
 require 'yaml'
 
 $:.unshift File.dirname(__FILE__)
-$:.unshift File.join(File.dirname(__FILE__), '..', 'lib/btrfs-time-machine')
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+require 'btrfs-time-machine'
 
 BTRFS_FS = "/tmp/test-tm/dev/btrfs"
 EXT4_FS = "/tmp/test-tm/dev/ext4"
 MOUNT_POINT = "/tmp/test-tm/mnt"
 TEST_DATA = "/tmp/test-tm/src"
-
-require 'filesystem'
-require 'rsync'
-require 'settings'
 
 def setup_file_systems
   FileUtils.mkdir_p(MOUNT_POINT)
