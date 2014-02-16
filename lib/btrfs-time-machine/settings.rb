@@ -26,6 +26,7 @@ module TimeMachine
       end
 
       s["exclusions"] ||= []
+      s["inclusions"] ||= []
 
       global_settings.each do |k,v|
         next if k == "sources"
