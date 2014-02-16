@@ -46,7 +46,7 @@ module TimeMachine
         end
       end
 
-      s["destination"] = File.join(s["backup_mount_point"], "/latest", source)
+      s["destination"] = destination_directory(source)
       s
     end
 
@@ -64,6 +64,14 @@ module TimeMachine
 
       @config["sources"] = [] unless @config.has_key?("sources")
       @config["sources"].push source
+    end
+
+    private
+    def destination_directory(source)
+      source = "root" if source == "/"
+      File.expand_path(
+        File.join(@config["backup_mount_point"], "/latest", source)
+      )
     end
 
   end
