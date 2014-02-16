@@ -29,11 +29,13 @@ module TimeMachine
         case v.class.to_s
           when "Hash"
             s[k] ||= {}
-            s[k].merge!(v)
+            s[k] = v.merge(s[k])
           when "Array"
             s[k] ||= []
             s[k] += v
-          when "String" || "FixNum"
+          when "Fixnum"
+            s[k] ||= v
+          when "String"
             s[k] ||= v
           when "TrueClass" || "FalseClass"
             s[k] = v unless s.include?(k)
