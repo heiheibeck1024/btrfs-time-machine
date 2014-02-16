@@ -29,7 +29,9 @@ module TimeMachine
       s["inclusions"] ||= []
 
       global_settings.each do |k,v|
-        next if k == "sources"
+        ignored_global_settings = %w[sources backup_mount_point]
+        next if ignored_global_settings.include?(k)
+
         case v.class.to_s
           when "Hash"
             s[k] ||= {}
@@ -45,7 +47,6 @@ module TimeMachine
             s[k] = v unless s.include?(k)
         end
       end
-
       s["destination"] = destination_directory(source)
       s
     end

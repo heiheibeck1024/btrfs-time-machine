@@ -38,6 +38,7 @@ context "#TimeMachine::Settings" do
           asserts(t+"['b']") {topic.global_settings[t]["b"]}.equals "b"
         end
       end
+      asserts("backup_mount_point") {topic.global_settings["backup_mount_point"]}.equals "/tmp/something"
     end
 
     context "sources settings" do
@@ -79,7 +80,7 @@ context "#TimeMachine::Settings" do
         denies("FalseClass") {@settings["FalseClass"]}
         asserts("Hash") {@settings["Hash"].to_s}.equals '{"a"=>"a", "b"=>"b"}'
         asserts("Array") {@settings["Array"]}.equals ['a', 'b' ]
-        asserts("backup_mount_point") {@settings["backup_mount_point"]}.equals "/tmp/something"
+        denies("backup_mount_point") {@settings.has_key?("backup_mount_point")}
         asserts("exclusions") {@settings["exclusions"]}.empty
         asserts("inclusions") {@settings["inclusions"]}.empty
       end
@@ -140,7 +141,7 @@ context "#TimeMachine::Settings" do
         denies("TrueClass") {@settings["TrueClass"]}
         asserts("FalseClass") {@settings["FalseClass"]}
         asserts("Hash") {@settings["Hash"].to_s}.equals '{"a"=>"aa", "b"=>"bb"}'
-        asserts("backup_mount_point") {@settings["backup_mount_point"]}.equals "/tmp/something"
+        denies("backup_mount_point") {@settings.has_key?("backup_mount_point")}
       end
 
       context "source settings without exclusions" do
