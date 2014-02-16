@@ -8,7 +8,7 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
-%w[ settings rsync ].each do |t|
+%w[ settings rsync filesystem].each do |t|
   Rake::TestTask.new("test_#{t}".to_s) do |test|
     test.libs << 'lib' << 'test'
     test.pattern = "test/**/test_#{t}.rb"
