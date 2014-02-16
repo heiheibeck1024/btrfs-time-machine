@@ -28,6 +28,7 @@ module TimeMachine
       s["exclusions"] ||= []
 
       global_settings.each do |k,v|
+        next if k == "sources"
         case v.class.to_s
           when "Hash"
             s[k] ||= {}

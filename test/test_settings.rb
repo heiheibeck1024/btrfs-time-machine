@@ -62,6 +62,7 @@ context "#TimeMachine::Settings" do
       asserts(:sources).size(1)
       asserts(:sources).kind_of Array
       asserts(:sources).equals ["/a/test"]
+      denies("sources key in source_settings") {topic.source_settings("/a/test").has_key?("sources")}
 
       context "includes global settings" do
         hookup do
@@ -182,6 +183,7 @@ context "#TimeMachine::Settings" do
       asserts("add_source without argument") {topic.add_source}.raises(ArgumentError)
       asserts("add_source without path") {topic.add_source({})}.raises(RuntimeError, 'Your config must include \'path\'.')
       asserts("add_source with existing path") {topic.add_source({'path' => '/tmp/primed'})}.raises(RuntimeError, 'You already have a source at that path')
+      # TODO: getting a source that doesn't exist.
     end
   end
 end
