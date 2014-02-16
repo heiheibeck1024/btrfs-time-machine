@@ -37,6 +37,9 @@ context "#TimeMachine::Rsync" do
     asserts("default option"){topic.options[TEST_DATA]}.includes {"--verbose"}
     asserts("default option"){topic.options[TEST_DATA]}.includes {"--xattrs"}
     asserts("extra option"){topic.options[TEST_DATA]}.includes {"--one-file-system"}
+    asserts(:commands).kind_of Array
+    asserts(:commands).size 1
+    asserts("first command") {topic.commands.first}.equals "/usr/bin/rsync --acls --archive --delete --delete-excluded --human-readable --inplace --no-whole-file --numeric-ids --verbose --xattrs --one-file-system /tmp/test-tm/mnt/latest/tmp/test-tm/src"
   end
 
   context "with exclusions" do
@@ -49,44 +52,6 @@ context "#TimeMachine::Rsync" do
 
     asserts("options"){topic.options[TEST_DATA]}.includes {"--exclude /blah"}
     asserts("options"){topic.options[TEST_DATA]}.includes {"--exclude /blah2"}
+    asserts("first command") {topic.commands.first}.equals "/usr/bin/rsync --acls --archive --delete --delete-excluded --human-readable --inplace --no-whole-file --numeric-ids --verbose --xattrs --one-file-system --exclude /blah --exclude /blah2 /tmp/test-tm/mnt/latest/tmp/test-tm/src"
   end
-
-
 end
-
-#  asserts("generates an Rsync object") {topic.is_a? TimeMachine::Rsync}
-#  asserts("has source directory'") {File.directory? TEST_DATA}
-#  asserts("has source data'") {File.exist?(File.join(TEST_DATA,"home/a"))}
-#  asserts("has destination directory'") {File.directory? MOUNT_POINT}
-#
-#  context "command for #{TEST_DATA}" do
-#    setup { topic.command(TEST_DATA) }
-#    %w[ --one-file-system --modify-window=1 --archive ].each do |switch|
-#      asserts("should have #{switch}") {!!topic.match(switch)}
-#    end
-#  end
-#
-#  context "should run" do
-#    hookup {
-#      @backup_dir = File.join(MOUNT_POINT, "latest", TEST_DATA)
-#      topic.run
-#    }
-#
-#    %w[ /home/a /home/b /home/c /home/d/a ].each do |f|
-#      asserts("that it does back up #{f}") {
-#        File.exist?(File.join(@backup_dir, f))
-#      }
-#    end
-#
-#    %w[ /tmp/a /tmp2/a ].each do |f|
-#      asserts("that it excludes #{f}") {
-#        !File.exist?(File.join(@backup_dir, f))
-#      }
-#    end
-#
-#    # TODO: check permissions of top level directory.
-#
-#    teardown { destroy_data }
-#  end
-#
-#end
