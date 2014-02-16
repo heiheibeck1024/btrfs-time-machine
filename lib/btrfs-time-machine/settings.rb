@@ -5,6 +5,10 @@ module TimeMachine
     def initialize config
       @config = config
 
+      %w[backup_mount_point].each do |k|
+        raise "Your config must include '#{k}'." unless @config.has_key?(k)
+      end
+
       #@config["sources"].each do |s|
       #  # drop the ./ of exclusions because rsync doesn't like em.
       #  s["exclusions"].map!{|e| e.gsub(/^\.\//, '') } if s.has_key?("exclusions")
@@ -46,6 +50,10 @@ module TimeMachine
     end
 
     def add_source source
+      %w[path].each do |k|
+        raise "Your config must include '#{k}'." unless source.has_key?(k)
+      end
+
       @config["sources"] = [] unless @config.has_key?("sources")
       @config["sources"].push source
     end
