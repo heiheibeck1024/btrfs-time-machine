@@ -24,7 +24,8 @@ module TimeMachine
       global_settings.each do |k,v|
         case v.class.to_s
           when "Hash"
-            raise "haven't written a handler for a hash yet..."
+            s[k] ||= {}
+            s[k].merge!(v)
           when "Array"
             s[k] ||= []
             s[k] += v
