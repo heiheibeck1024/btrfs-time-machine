@@ -8,10 +8,12 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
-Rake::TestTask.new(:test_settings) do |test|
-  test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/test_settings.rb'
-  test.verbose = true
+%w[ settings rsync ].each do |t|
+  Rake::TestTask.new("test_#{t}".to_s) do |test|
+    test.libs << 'lib' << 'test'
+    test.pattern = "test/**/test_#{t}.rb"
+    test.verbose = true
+  end
 end
 
 task :default => :test
