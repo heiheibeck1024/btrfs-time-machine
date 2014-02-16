@@ -56,6 +56,8 @@ module TimeMachine
         raise "Your config must include '#{k}'." unless source.has_key?(k)
       end
 
+      raise "You already have a source at that path" if sources.include?(source["path"])
+
       @config["sources"] = [] unless @config.has_key?("sources")
       @config["sources"].push source
     end
