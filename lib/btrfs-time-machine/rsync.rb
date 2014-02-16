@@ -1,20 +1,22 @@
 module TimeMachine
   class Rsync
-    def initialize(sources,config)
-      @rsync_bin = `which rsync`.strip
-      @sources = sources
-      @config = config
+    def initialize(settings)
+      @rsync_bin = `which rsync`.strip    # TODO: use ptools
+
+      unless settings.is_a? TimeMachine::Settings
+        raise "You must provide a settings object"
+      end
+
+      @settings = settings
 
       # TODO:
       # - make sure that source is a directory
       # - make sure that destination is a btrfs directory
       # - raise an error if the rsync bin was not found.
-      # - raise an error if destination is unknown
-
     end
 
     def run
-      @sources.each do |source|
+      commands.each do |destination,cmd|
         FileUtils.mkdir_p destination
         cmd = Mixlib::ShellOut(command)
         cmd.run_command
@@ -23,21 +25,74 @@ module TimeMachine
       true
     end
 
-    def command source
-      o = options(source).join(" ")
-      d = destination(source)
-      s = source
+    def commands
+      cmds = []
+      @settings.sources.each do |source|
+        settings = @settings.source_settings(source)
+        rsync_options = settings["rsync_options"]
+        destination = settings["destination"]
 
-      ## TODO: fix this
-      ## if source is a directory make sure it's got a trailing slash
-      #if !File.directory?(s["source"]) && File.exist?(s["source"]) && !!s["source"].match(/\/$/)
-      #  s["source"] = s["source"] + "/" 
-      #end
+        ## TODO: fix this
+        ## if source is a directory make sure it's got a trailing slash
+        #if !File.directory?(s["source"]) && File.exist?(s["source"]) && !!s["source"].match(/\/$/)
+        #  s["source"] = s["source"] + "/" 
+        #end
 
-      # rsync wants a trailing slash.
-      "#{@rsync_bin} #{o} #{s} #{d}"
+        cmds.push( {source => [@rsync_bin, options, destination].join(" ")} )
+      end
+      cmds
+    end
+
+    def options sources=@settings.sources
+      raise "You must parse an array of sources" unless sources.is_a? Array
+
+      options = {}
+      sources.each do |s|
+        raise "#{s} is an invalid source." unless valid_source?(s)
+        options[s] = rsync_options(s) + rsync_extras(s) + rsync_exclusions(s)
+        options[s].uniq!
+      end
+      options
     end
 
     private
+    def valid_source? source
+      @settings.sources.include?(source)
+    end
+
+    def rsync_options source
+      options = %w[
+        --acls
+        --archive
+        --delete
+        --delete-excluded
+        --human-readable
+        --inplace
+        --no-whole-file
+        --numeric-ids
+        --verbose
+        --xattrs
+      ]
+
+      if @settings.source_settings(source).has_key?("rsync_options")
+        options += @settings.source_settings(source)["rsync_options"]
+      end
+
+      options.uniq
+    end
+
+    def rsync_extras source
+      settings = @settings.source_settings(source)
+      options = []
+      options += ["--one-file-system"] unless settings["one-file-system"]
+      options += ["--one-file-system"] unless settings["snapshot"]
+      options.uniq
+    end
+
+    def rsync_exclusions source
+      settings = @settings.source_settings(source)
+      settings["exclusions"].map{|e| "--exclude #{e}"}
+    end
+
   end
 end
