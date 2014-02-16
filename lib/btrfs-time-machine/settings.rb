@@ -22,7 +22,7 @@ module TimeMachine
     def source_settings source
       s = {}
       @config["sources"].each do |data|
-        s = data if data["source"] == source
+        s = data if data["path"] == source
       end
 
       global_settings.each do |k,v|
