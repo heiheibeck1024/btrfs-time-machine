@@ -14,6 +14,7 @@ context "#TimeMachine::Settings" do
       Array:
         - "a"
         - "b"
+      backup_mount_point: /tmp/something
     EOF
     TimeMachine::Settings.new(config)
   end
