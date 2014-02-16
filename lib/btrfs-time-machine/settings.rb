@@ -16,7 +16,7 @@ module TimeMachine
     end
 
     def global_settings
-      @config.reject{|k,v| k == "sources"}
+      @config
     end
 
     def source_settings source
@@ -24,6 +24,8 @@ module TimeMachine
       @config["sources"].each do |data|
         s = data if data["path"] == source
       end
+
+      s["exclusions"] ||= []
 
       global_settings.each do |k,v|
         case v.class.to_s
@@ -60,33 +62,6 @@ module TimeMachine
 
       @config["sources"] = [] unless @config.has_key?("sources")
       @config["sources"].push source
-    end
-
-    def rsync_options source
-      options = %w[
-        --acls
-        --archive
-        --delete
-        --delete-excluded
-        --human-readable
-        --inplace
-        --no-whole-file
-        --numeric-ids
-        --verbose
-        --xattrs
-      ]
-
-      options += @config["rsync_options"]
-
-      settings = source_settings(source)
-      options += settings["rsync_options"]
-
-      if settings["snapshot"] || settings["one-filesystem"]
-        options += ["--one-file-system"] 
-      end
-
-      options += settings["exclusions"].map{|e| "--exclude #{e}"}
-      options.uniq
     end
 
   end
