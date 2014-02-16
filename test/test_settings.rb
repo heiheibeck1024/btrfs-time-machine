@@ -202,6 +202,9 @@ context "#TimeMachine::Settings" do
         asserts("destination") {@settings["destination"]}.equals "/tmp/something/latest/root"
       end
     end
+
+    # TODO: support destination_subfolder from eugenk
+    # TODO: mount_dest_device from eugenk
   end
 
   context "exceptions" do
