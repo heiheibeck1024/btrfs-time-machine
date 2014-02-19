@@ -14,6 +14,7 @@ module TimeMachine
     end
 
     def run
+      # TODO: create a lock file to prevent simultaneous backups.
       commands.each do |destination,cmd|
         FileUtils.mkdir_p destination
         cmd = Mixlib::ShellOut(command)
