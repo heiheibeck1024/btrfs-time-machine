@@ -1,8 +1,6 @@
 module TimeMachine
   class Rsync
     def initialize(settings)
-      @rsync_bin = `which rsync`.strip    # TODO: use ptools
-
       unless settings.is_a? TimeMachine::Settings
         raise "You must provide a settings object"
       end
@@ -29,12 +27,15 @@ module TimeMachine
       cmds = []
 
       options.each do |s,o|
+        rsync_bin = File.which("rsync")
+        raise "rsync could not be found" if rsync_bin.nil?
+
         d = @settings.source_settings(s)["destination"]
 
         ## TODO: fix this
         ## if source is a directory make sure it's got a trailing slash
         #if !File.directory?(s["source"]) && File.exist?(s["source"]) && !!s["source"].match(/\/$/)
-        #  s["source"] = s["source"] + "/" 
+        #  s["source"] = s["source"] + "/"
         #end
 
         cmds.push([@rsync_bin, o, d].join(" "))
