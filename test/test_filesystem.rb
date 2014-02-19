@@ -50,13 +50,13 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
   end
 
   context "delete read-only snapshot" do
-    hookup {topic.btrfs_subvolume_delete "rosnap"}
+    hookup {topic.btrfs_snapshot_delete "rosnap"}
     asserts("has no rosnap directory") {!Dir.entries(MOUNT_POINT).include? "rosnap"}
     asserts("has no rosnap subvolume") {!topic.btrfs_subvolumes.include? "rosnap"}
   end
 
   context "delete read-write snapshot" do
-    hookup {topic.btrfs_subvolume_delete "rwsnap"}
+    hookup {topic.btrfs_snapshot_delete "rwsnap"}
     asserts("has no rwsnap directory") {!Dir.entries(MOUNT_POINT).include? "rwsnap"}
     asserts("has no rwsnap subvolume") {!topic.btrfs_subvolumes.include? "rwsnap"}
   end

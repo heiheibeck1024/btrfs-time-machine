@@ -80,6 +80,8 @@ module TimeMachine
       $?.success?
     end
 
+    alias_method :btrfs_snapshot_delete, :btrfs_subvolume_delete
+
     def read_only? path=""
       return nil unless mounted?(path)
 
