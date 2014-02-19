@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'rake'
-
 require 'rake/testtask'
+
+require 'os'
+
 Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
   test.pattern = 'test/**/test_*.rb'
@@ -15,5 +17,7 @@ end
     test.verbose = true
   end
 end
+
+# TODO: install dependencies for various distros.
 
 task :default => :test
