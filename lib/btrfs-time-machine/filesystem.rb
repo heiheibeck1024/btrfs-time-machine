@@ -38,8 +38,9 @@ module TimeMachine
 
     def mount
       unless mounted?
-        `mount #{@device} #{@mount_point}`
-        if $?.success?
+        @log.debug "mounting #{@device} to #{@mount_point}"
+        cmd = Mixlib::ShellOut.new("mount #{@device} #{@mount_point}").run_command
+        if cmd.exitstatus.zero?
           @log.info("mounted #{@mount_point}")
           return true
         else
@@ -53,8 +54,8 @@ module TimeMachine
 
     def umount
       if mounted?
-        `umount #{@mount_point}`
-        if $?.success?
+        cmd = Mixlib::ShellOut.new("umount #{@device}").run_command
+        if cmd.exitstatus.zero?
           @log.info("umounted #{@mount_point}")
           return true
         else
@@ -64,7 +65,7 @@ module TimeMachine
       end
 
       @log.debug "cannot umount because #{@device} is not mounted."
-      false
+      nil
     end
 
     def btrfs_volume?
@@ -79,32 +80,56 @@ module TimeMachine
     end
 
     def btrfs_subvolume_create path
-      return false unless btrfs_volume?
-      return true if btrfs_subvolume?(path)
-      `btrfs subvolume create #{full_path(path)}`
-      $?.success?
+      path = full_path(path)
+
+      unless btrfs_volume?
+        @log.error "cannot create btrfs subvolume at #{path} because it is not a btrfs subvolume."
+        return false
+      end
+
+      if btrfs_subvolume?(path)
+        @log.error "cannot create btrfs subvolume at #{path} because it already exists."
+        return false
+      end
+
+      @log.info "creating btrfs subvolume at #{full_path(path)}"
+      cmd = Mixlib::ShellOut.new("btrfs subvolume create #{path}").run_command
+      cmd.exitstatus.zero?
     end
 
     def btrfs_subvolume_delete path
-      return false unless btrfs_subvolume?(path)
-      `btrfs subvolume delete #{full_path(path)}`
-      $?.success?
+      unless btrfs_subvolume?(path)
+        @log.error "cannot delete btrfs subvolume at #{path} because it does not exist."
+        return false
+      end
+
+      path = full_path(path)
+      cmd = Mixlib::ShellOut.new("btrfs subvolume delete #{path}").run_command
+      cmd.exitstatus.zero?
     end
 
     def btrfs_subvolumes
-      `btrfs subvolume list #{@mount_point} 2> /dev/null | awk '{ print $7 }'`.split
+      cmd = Mixlib::ShellOut.new("btrfs subvolume list #{@mount_point}").run_command
+      cmd.stdout.each_line.map{|l| l.split(" ").last}
     end
 
     def btrfs_snapshot_create src, dst, options={:read_only=>false}
       # TODO: destination should always be the date.
-      return false unless btrfs_subvolume? src
-      return false if btrfs_subvolume? dst
+      unless btrfs_subvolume? src
+        @log.error "cannot create snapshot of #{src} because it's not a btrfs subvolume"
+      end
 
-      `btrfs subvolume snapshot \
-        #{"-r" if options[:read_only]} \
-        #{full_path src} #{full_path dst}
-      `
-      $?.success?
+      src = full_path(src)
+      dst = full_path(dst)
+      @log.info "creating snapshot of #{src} at #{dst}."
+
+      cmd = Mixlib::ShellOut.new(
+        "btrfs subvolume snapshot \
+          #{"-r" if options[:read_only]} \
+          #{full_path src} #{full_path dst}
+        "
+      ).run_command
+      cmd.exitstatus.zero?
     end
 
     alias_method :btrfs_snapshot_delete, :btrfs_subvolume_delete
