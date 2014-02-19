@@ -38,7 +38,7 @@ module TimeMachine
         #  s["source"] = s["source"] + "/"
         #end
 
-        cmds.push([@rsync_bin, o, d].join(" "))
+        cmds.push([rsync_bin, o, d].join(" "))
       end
       cmds
     end
