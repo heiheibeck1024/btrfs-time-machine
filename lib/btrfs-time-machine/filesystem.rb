@@ -1,9 +1,14 @@
+# TODO: use Mixlib::ShellOut everywhere.
+# TODO: log errors
+
 require 'fileutils'
 
 module TimeMachine
   class FileSystem
     def initialize device,mount_point
       `btrfs device scan`
+      # TODO: if device == uuid, convert it to a device.
+      #@device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
       @device = device
       @mount_point = mount_point
     end
@@ -70,6 +75,7 @@ module TimeMachine
     end
 
     def btrfs_snapshot_create src, dst, options={:read_only=>false}
+      # TODO: destination should always be the date.
       return false unless btrfs_subvolume? src
       return false if btrfs_subvolume? dst
 
@@ -88,7 +94,7 @@ module TimeMachine
     end
 
     def btrfs_snapshot_date
-      # TODO: return the DateTime the snapshot was taken.
+      # TODO: return a DateTime object from the snapshot name.
       nil
     end
 
