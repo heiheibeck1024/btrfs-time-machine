@@ -7,3 +7,10 @@ require 'mixlib/shellout'
 require 'ptools'
 require 'rsync'
 require 'settings'
+
+Logging.appenders.stdout(
+  'stdout',
+  :layout => Logging.layouts.pattern(
+    :pattern => '%d\t%-5l\t%c\t%m\n'
+  )
+)

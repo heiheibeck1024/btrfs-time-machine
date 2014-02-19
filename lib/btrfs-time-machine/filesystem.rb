@@ -11,6 +11,10 @@ module TimeMachine
       #@device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
       @device = device
       @mount_point = mount_point
+
+      @log = Logging.logger['TimeMachine::FileSystem']
+      @log.add_appenders 'stdout'
+      @log.level = :debug
     end
 
     def mount_options path=""
@@ -33,17 +37,34 @@ module TimeMachine
     end
 
     def mount
-      puts mounted?.inspect
-      unless mounted? then
+      unless mounted?
         `mount #{@device} #{@mount_point}`
-        $?.success?
+        if $?.success?
+          @log.info("mounted #{@mount_point}")
+          return true
+        else
+          @log.error("failed to umount #{@mount_point}")
+          return false
+        end
       end
+
+      @log.debug "cannot mount because #{@device} is already mounted."
     end
 
     def umount
-      return nil unless mounted?
-      `umount #{@mount_point}`
-      $?.success?
+      if mounted?
+        `umount #{@mount_point}`
+        if $?.success?
+          @log.info("umounted #{@mount_point}")
+          return true
+        else
+          @log.error("failed to umount #{@mount_point}")
+          return false
+        end
+      end
+
+      @log.debug "cannot umount because #{@device} is not mounted."
+      false
     end
 
     def btrfs_volume?
