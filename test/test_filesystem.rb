@@ -61,6 +61,9 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
     asserts("has no rwsnap subvolume") {!topic.btrfs_subvolumes.include? "rwsnap"}
   end
 
+  # TODO: get list of snapshots.
+  # TODO: get snapshot date.
+
   context "after remounting" do
     hookup { topic.remount(["ro"])}
     asserts("is now mounted")       {topic.mounted?}

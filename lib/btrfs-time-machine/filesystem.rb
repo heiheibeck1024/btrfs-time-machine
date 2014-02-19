@@ -82,6 +82,16 @@ module TimeMachine
 
     alias_method :btrfs_snapshot_delete, :btrfs_subvolume_delete
 
+    def btrfs_snapshots source
+      # TODO: return list of snapshots of a source.
+      nil
+    end
+
+    def btrfs_snapshot_date
+      # TODO: return the DateTime the snapshot was taken.
+      nil
+    end
+
     def read_only? path=""
       return nil unless mounted?(path)
 
