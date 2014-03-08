@@ -152,6 +152,7 @@ module TimeMachine
       return false unless options.is_a? Array
 
       options.push("remount")
+      # TODO: use execute method here.
       `mount -o #{options.join(",")} #{@device} #{full_path(path)}`
       $?.success?
     end
