@@ -19,7 +19,7 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
     # TODO: test mounting a filesystem on top of a mounted filesystem
     asserts("is now mounted")       {topic.mounted?}
     asserts("is a btrfs volume")    {topic.btrfs_volume?}
-    denies("is read-write")         {topic.read_only?}
+    denies("read only")             {topic.read_only?}
     asserts("delete non-existant subvolume") {topic.btrfs_subvolume_delete "x"}
     asserts("subvolumes is empty") {topic.btrfs_subvolumes.empty?}
   end
@@ -33,7 +33,7 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
 
   context "take read-only snapshot" do
     hookup { topic.btrfs_snapshot_create("test", "rosnap", {:read_only=>true} ) }
-    asserts("has a rosnap directory") {Dir.entries(MOUNT_POINT).include? "rosnap"}
+    asserts("has a rosnap directory in #{MOUNT_POINT}") {Dir.entries(MOUNT_POINT).include? "rosnap"}
     asserts("is read-only")        {topic.read-only?("rosnap")}
     asserts("mount options")       {topic.mount_options("rosnap").empty?}
   end

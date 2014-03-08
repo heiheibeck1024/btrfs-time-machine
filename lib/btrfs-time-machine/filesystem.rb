@@ -108,22 +108,23 @@ module TimeMachine
     end
 
     def btrfs_snapshot_create src, dst, options={:read_only=>false}
-      # TODO: destination should always be the date.
-      unless btrfs_subvolume? src
-        LOG.error "cannot create snapshot of #{src} because it's not a btrfs subvolume"
-      end
+      cmd = []
+      cmd.push "btrfs subvolume snapshot"
+      cmd.push "-r" if options[:read_only]
+      cmd.push full_path(src)
+      cmd.push full_path(dst)
 
-      src = full_path(src)
-      dst = full_path(dst)
-      LOG.info "creating snapshot of #{src} at #{dst}."
+      execute(
+        {
+          :cmd => cmd.join(" "),
+          :failure => {:msg => "Failed to create snapshot of #{src} at #{dst}."},
+          :success => {:msg => "Created snapshot of #{src} at #{dst}."}
+        }
+      )
 
-      cmd = Mixlib::ShellOut.new(
-        "btrfs subvolume snapshot \
-          #{"-r" if options[:read_only]} \
-          #{full_path src} #{full_path dst}
-        "
-      ).run_command
-      cmd.exitstatus.zero?
+      LOG.fatal <<-EOF.gsub(/^\s*/, '').strip unless btrfs_subvolumes.include?(full_path(dst))
+        An error occured creating smapshot. This should not happen.
+      EOF
     end
 
     alias_method :btrfs_snapshot_delete, :btrfs_subvolume_delete
