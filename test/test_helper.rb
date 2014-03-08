@@ -5,7 +5,9 @@ require 'yaml'
 
 $:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
 require 'btrfs-time-machine'
+LOG.level = Logger::DEBUG
 
 BTRFS_FS = "/tmp/test-tm/dev/btrfs"
 EXT4_FS = "/tmp/test-tm/dev/ext4"

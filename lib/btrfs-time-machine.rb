@@ -3,14 +3,10 @@ $:.unshift File.join(File.dirname(__FILE__), '/btrfs-time-machine')
 
 require 'command'
 require 'filesystem'
-require 'logging'
+require 'logger'
 require 'ptools'
 require 'rsync'
 require 'settings'
 
-Logging.appenders.stdout(
-  'stdout',
-  :layout => Logging.layouts.pattern(
-    :pattern => '%d\t%-5l\t%c\t%m\n'
-  )
-)
+LOG = Logger.new(STDOUT)
+LOG.level = Logger::WARN    # Default level is warn. Disregard anything lower.

@@ -1,9 +1,9 @@
 module Command
-  require 'logging'
   require 'mixlib/shellout'
+  # TODO: get the log level from settings and apply it here.
 
   def execute data
-    log_fatal("Invalid data") unless data.is_a? Hash
+    LOG.fatal("Invalid data") unless data.is_a? Hash
 
     # set the defaults
     data[:cmd]              ||= nil
@@ -30,21 +30,4 @@ module Command
       return false
     end
   end
-
-  # TODO: sort out the logging
-  def log data
-    @log fatal
-    data[:msg] 
-  end
-
-  def log_error msg
-    @log fatal
-  end
-
-  def log_fatal msg
-    @log fatal
-    raise "A fatal error occurred. See the log for details."
-    exit 1
-  end
-
 end
