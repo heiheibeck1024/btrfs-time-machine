@@ -2,6 +2,7 @@
 # TODO: log errors
 
 require 'fileutils'
+require 'mixlib/shellout'
 
 module TimeMachine
   class FileSystem

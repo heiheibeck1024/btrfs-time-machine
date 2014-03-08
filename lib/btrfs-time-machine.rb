@@ -3,6 +3,7 @@ $:.unshift File.join(File.dirname(__FILE__), '/btrfs-time-machine')
 
 require 'command'
 require 'filesystem'
+require 'fileutils'
 require 'logger'
 require 'ptools'
 require 'rsync'
