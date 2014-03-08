@@ -33,9 +33,9 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
 
   context "take read-only snapshot" do
     hookup { topic.btrfs_snapshot_create("test", "rosnap", {:read_only=>true} ) }
-    asserts("has a rosnap directory in #{MOUNT_POINT}") {Dir.entries(MOUNT_POINT).include? "rosnap"}
-    asserts("is read-only")        {topic.read-only?("rosnap")}
-    asserts("mount options")       {topic.mount_options("rosnap").empty?}
+    asserts("rosnap directory exists in #{MOUNT_POINT}") {Dir.entries(MOUNT_POINT).include? "rosnap"}
+    asserts("read-only")              {topic.read_only?("rosnap")}
+    asserts("mount options")          {topic.mount_options("rosnap").empty?}
   end
 
   context "take read-write snapshot" do
@@ -65,7 +65,7 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
   # TODO: get list of snapshots.
   # TODO: get snapshot date.
 
-  context "after remounting" do
+  context "after remounting read-only" do
     hookup { topic.remount(["ro"])}
     asserts("is now mounted")       {topic.mounted?}
     asserts("is a btrfs volume")    {topic.btrfs_volume?}

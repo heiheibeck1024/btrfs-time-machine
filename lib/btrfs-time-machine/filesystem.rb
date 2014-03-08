@@ -143,13 +143,8 @@ module TimeMachine
     end
 
     def read_only? path=""
-      return nil unless mounted?(path)
-
-      if btrfs_subvolume?(path)
-        !!FileUtils.touch(full_path(path))
-      end
-
-      mount_options(path).include? "ro"
+      return nil unless mounted? path
+      return !File.writable?(full_path(path))
     end
 
     def remount(options) path=""
