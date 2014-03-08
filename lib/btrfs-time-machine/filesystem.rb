@@ -70,30 +70,36 @@ module TimeMachine
     def btrfs_subvolume_create path
       path = full_path(path)
 
-      unless btrfs_volume?
-        LOG.error "cannot create btrfs subvolume at #{path} because it is not a btrfs subvolume."
-        return false
-      end
+      LOG.fatal <<-EOF.gsub(/^\s*/, '').strip unless btrfs_volume?
+        cannot create btrfs subvolume at #{path} because it is not a btrfs
+        subvolume.
+      EOF
 
-      if btrfs_subvolume?(path)
-        LOG.error "cannot create btrfs subvolume at #{path} because it already exists."
-        return false
-      end
+      LOG.fatal <<-EOF.gsub(/^\s*/, '').strip if btrfs_subvolume?(path)
+        cannot create btrfs subvolume at #{path} because it already exists.
+      EOF
 
-      LOG.info "creating btrfs subvolume at #{full_path(path)}"
-      cmd = Mixlib::ShellOut.new("btrfs subvolume create #{path}").run_command
-      cmd.exitstatus.zero?
+      execute(
+        {
+          :cmd => "btrfs subvolume create #{path}",
+          :failure => {:msg => "failed to create btrfs subvolume at #{path}"},
+          :success => {:msg => "created btrfs subvolume at #{path}"}
+        }
+      )
     end
 
     def btrfs_subvolume_delete path
-      unless btrfs_subvolume?(path)
-        LOG.error "cannot delete btrfs subvolume at #{path} because it does not exist."
-        return false
-      end
-
       path = full_path(path)
-      cmd = Mixlib::ShellOut.new("btrfs subvolume delete #{path}").run_command
-      cmd.exitstatus.zero?
+      unless btrfs_subvolume? path
+        execute(
+          {
+            :cmd => "btrfs subvolume delete #{path}",
+            :failure => {:msg => "failed to delete btrfs subvolume at #{path}"},
+            :success => {:msg => "deleted btrfs subvolume at #{path}"}
+          }
+        )
+      end
+      !btrfs_subvolume?(path)
     end
 
     def btrfs_subvolumes
