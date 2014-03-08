@@ -37,7 +37,21 @@ module TimeMachine
       false
     end
 
-    def mount
+    def mount path="", options=[]
+      path = full_path(path)
+      command = []
+      command.push "mount"
+      command.push "-o" unless options.empty?
+      command.push options.join(",")
+      command.push @device
+      command.push path
+
+      execute({
+        :cmd => command.join(" "),
+        :success => {:msg => "Mounted #{path}"},
+        :failure => {:msg => "Failed to mount #{path}"}
+      })
+
       execute(
         {
           :cmd => "mount #{@device} #{@mount_point}",
@@ -147,14 +161,11 @@ module TimeMachine
       return !File.writable?(full_path(path))
     end
 
-    def remount(options) path=""
+    def remount(options)
       return false unless mounted?
       return false unless options.is_a? Array
-
-      options.push("remount")
-      # TODO: use execute method here.
-      `mount -o #{options.join(",")} #{@device} #{full_path(path)}`
-      $?.success?
+      options.push "remount"
+      mount("", options)
     end
 
     private
