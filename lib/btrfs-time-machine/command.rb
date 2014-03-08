@@ -24,16 +24,16 @@ module Command
 
   def status
     cmd = @data[:test_cmd]
-    case cmd.class
-      when NilClass
+    case cmd.class.to_s
+      when "NilClass"
         succeeded = @exitstatus
-      when TrueClass
+      when "TrueClass"
         succeeded = true
-      when FalseClass
+      when "FalseClass"
         succeeded = false
-      when Symbol
+      when "Symbol"
         succeeded = send(cmd.to_s) if public_methods.include?(cmd)
-      when String
+      when "String"
         succeeded ||= Mixlib::ShellOut.new(cmd).run_command.exitstatus.to_i.zero?
     end
 
