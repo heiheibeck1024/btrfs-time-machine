@@ -35,48 +35,25 @@ module TimeMachine
     end
 
     def mount
-      unless mounted?
-        execute(
-          {
-            :cmd => "mount #{@device} #{@mount_point}",
-            :success => { 
-              :msg => "mounted #{@mount_point}",
-              :level => "info"
-            },
-            :failure => {
-              :msg => "message",
-              :level => "info"
-            }
-          }
-        )
-        LOG.debug "mounting #{@device} to #{@mount_point}"
-        cmd = Mixlib::ShellOut.new("mount #{@device} #{@mount_point}").run_command
-        if cmd.exitstatus.zero?
-          LOG.info("mounted #{@mount_point}")
-          return true
-        else
-          LOG.error("failed to umount #{@mount_point}")
-          return false
-        end
-      end
-
-      LOG.debug "cannot mount because #{@device} is already mounted."
+      execute(
+        {
+          :cmd => "mount #{@device} #{@mount_point}",
+          :test_cmd => :mounted?,
+          :failure => {:msg => "failed to mount #{@device} to #{@mount_point}"},
+          :success => {:msg => "mounted #{@mount_point} to #{@mount_point}"}
+        }
+      )
     end
 
     def umount
-      if mounted?
-        cmd = Mixlib::ShellOut.new("umount #{@device}").run_command
-        if cmd.exitstatus.zero?
-          LOG.info("umounted #{@mount_point}")
-          return true
-        else
-          LOG.error("failed to umount #{@mount_point}")
-          return false
-        end
-      end
-
-      LOG.debug "cannot umount because #{@device} is not mounted."
-      nil
+      !execute(
+        {
+          :cmd => "umount #{@device}",
+          :test_cmd => :mounted?,
+          :failure => {:msg => "failed to unmount #{@device}"},
+          :success => {:msg => "unmounted #{@device}"}
+        }
+      )
     end
 
     def btrfs_volume?

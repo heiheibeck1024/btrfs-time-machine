@@ -8,7 +8,7 @@ context "#TimeMachine::FileSystem - btrfs filesystem" do
 
   asserts("is not mounted") {!topic.mounted?}
   asserts("mount_options is empty") {topic.mount_options.empty?}
-  asserts("unmounting unmounted is nil") {topic.umount.nil?}
+  asserts("unmounting unmounted is true") {topic.umount}
   asserts("btrfs_volume? is nil") {topic.btrfs_volume?.nil?}
   asserts("read_only? is nil") {topic.read_only?.nil?}
   asserts("subvolumes is empty") {topic.btrfs_subvolumes.empty?}

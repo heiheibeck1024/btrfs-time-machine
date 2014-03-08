@@ -7,7 +7,7 @@ require 'logger'
 $:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-LOG = Logger.new("/dev/null")
+LOG = Logger.new("/tmp/out")
 LOG.level = Logger::DEBUG
 
 require 'btrfs-time-machine'
