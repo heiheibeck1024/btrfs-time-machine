@@ -125,8 +125,8 @@ module TimeMachine
         }
       )
 
-      LOG.fatal <<-EOF.gsub(/^\s*/, '').strip unless btrfs_subvolumes.include?(full_path(dst))
-        An error occured creating smapshot. This should not happen.
+      LOG.fatal <<-EOF.gsub(/^\s*/, '').strip unless btrfs_subvolumes.include?(dst)
+        An error occured creating snapshot. This should not happen.
       EOF
     end
 
