@@ -1,6 +1,3 @@
-# TODO: use Mixlib::ShellOut everywhere.
-# TODO: log errors
-
 require 'fileutils'
 require 'mixlib/shellout'
 
@@ -9,7 +6,12 @@ module TimeMachine
     include Command
 
     def initialize device,mount_point
-      `btrfs device scan`
+      execute({
+        :cmd => "btrfs device scan",
+        :failure => {:msg => "failed to scan for btrfs devices."},
+        :success => {:msg => "scanned for btrfs devices."}
+      })
+
       # TODO: if device == uuid, convert it to a device.
       #@device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
       @device = device
