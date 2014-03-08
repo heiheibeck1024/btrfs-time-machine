@@ -8,5 +8,7 @@ require 'ptools'
 require 'rsync'
 require 'settings'
 
-LOG = Logger.new(STDOUT)
-LOG.level = Logger::WARN    # Default level is warn. Disregard anything lower.
+unless defined? LOG
+  LOG = Logger.new(STDOUT)
+  LOG.level = Logger::DEBUG
+end

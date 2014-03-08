@@ -2,12 +2,15 @@ require 'mixlib/shellout'
 require 'riot'
 require 'rubygems'
 require 'yaml'
+require 'logger'
 
 $:.unshift File.dirname(__FILE__)
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-require 'btrfs-time-machine'
+LOG = Logger.new("/dev/null")
 LOG.level = Logger::DEBUG
+
+require 'btrfs-time-machine'
 
 BTRFS_FS = "/tmp/test-tm/dev/btrfs"
 EXT4_FS = "/tmp/test-tm/dev/ext4"
