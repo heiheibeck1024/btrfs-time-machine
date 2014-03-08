@@ -1,6 +1,7 @@
 module Command
   require 'mixlib/shellout'
   # TODO: get the log level from settings and apply it here.
+  # TODO: do the locking to prevent simultaneous runs.
 
   def execute data
     LOG.fatal("Invalid data") unless data.is_a? Hash
