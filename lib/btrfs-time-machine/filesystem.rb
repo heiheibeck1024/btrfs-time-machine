@@ -5,16 +5,14 @@ require 'fileutils'
 
 module TimeMachine
   class FileSystem
+    include Command
+
     def initialize device,mount_point
       `btrfs device scan`
       # TODO: if device == uuid, convert it to a device.
       #@device = `blkid | grep '#{cfg['dest_device_uuid']}'`.split(':').first
       @device = device
       @mount_point = mount_point
-
-      @log = Logging.logger['TimeMachine::FileSystem']
-      @log.add_appenders 'stdout'
-      @log.level = :debug
     end
 
     def mount_options path=""
@@ -38,33 +36,46 @@ module TimeMachine
 
     def mount
       unless mounted?
-        @log.debug "mounting #{@device} to #{@mount_point}"
+        execute(
+          {
+            :cmd => "mount #{@device} #{@mount_point}",
+            :success => { 
+              :msg => "mounted #{@mount_point}",
+              :level => "info"
+            },
+            :failure => {
+              :msg => "message",
+              :level => "info"
+            }
+          }
+        )
+        LOG.debug "mounting #{@device} to #{@mount_point}"
         cmd = Mixlib::ShellOut.new("mount #{@device} #{@mount_point}").run_command
         if cmd.exitstatus.zero?
-          @log.info("mounted #{@mount_point}")
+          LOG.info("mounted #{@mount_point}")
           return true
         else
-          @log.error("failed to umount #{@mount_point}")
+          LOG.error("failed to umount #{@mount_point}")
           return false
         end
       end
 
-      @log.debug "cannot mount because #{@device} is already mounted."
+      LOG.debug "cannot mount because #{@device} is already mounted."
     end
 
     def umount
       if mounted?
         cmd = Mixlib::ShellOut.new("umount #{@device}").run_command
         if cmd.exitstatus.zero?
-          @log.info("umounted #{@mount_point}")
+          LOG.info("umounted #{@mount_point}")
           return true
         else
-          @log.error("failed to umount #{@mount_point}")
+          LOG.error("failed to umount #{@mount_point}")
           return false
         end
       end
 
-      @log.debug "cannot umount because #{@device} is not mounted."
+      LOG.debug "cannot umount because #{@device} is not mounted."
       nil
     end
 
@@ -83,23 +94,23 @@ module TimeMachine
       path = full_path(path)
 
       unless btrfs_volume?
-        @log.error "cannot create btrfs subvolume at #{path} because it is not a btrfs subvolume."
+        LOG.error "cannot create btrfs subvolume at #{path} because it is not a btrfs subvolume."
         return false
       end
 
       if btrfs_subvolume?(path)
-        @log.error "cannot create btrfs subvolume at #{path} because it already exists."
+        LOG.error "cannot create btrfs subvolume at #{path} because it already exists."
         return false
       end
 
-      @log.info "creating btrfs subvolume at #{full_path(path)}"
+      LOG.info "creating btrfs subvolume at #{full_path(path)}"
       cmd = Mixlib::ShellOut.new("btrfs subvolume create #{path}").run_command
       cmd.exitstatus.zero?
     end
 
     def btrfs_subvolume_delete path
       unless btrfs_subvolume?(path)
-        @log.error "cannot delete btrfs subvolume at #{path} because it does not exist."
+        LOG.error "cannot delete btrfs subvolume at #{path} because it does not exist."
         return false
       end
 
@@ -116,12 +127,12 @@ module TimeMachine
     def btrfs_snapshot_create src, dst, options={:read_only=>false}
       # TODO: destination should always be the date.
       unless btrfs_subvolume? src
-        @log.error "cannot create snapshot of #{src} because it's not a btrfs subvolume"
+        LOG.error "cannot create snapshot of #{src} because it's not a btrfs subvolume"
       end
 
       src = full_path(src)
       dst = full_path(dst)
-      @log.info "creating snapshot of #{src} at #{dst}."
+      LOG.info "creating snapshot of #{src} at #{dst}."
 
       cmd = Mixlib::ShellOut.new(
         "btrfs subvolume snapshot \
