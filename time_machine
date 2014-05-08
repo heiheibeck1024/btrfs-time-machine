@@ -197,7 +197,7 @@ def rsync
       do_snapshot_src = false
       src2 = src
     end
-    rsync = command_path('rsync')
+    rsync = command_path('ionice -c 3 nice -n 20 rsync')
     rsync_opts = '-v -aAX --numeric-ids --delete --delete-excluded --human-readable --inplace --no-whole-file'
 
     unless @rsync_options.nil?
